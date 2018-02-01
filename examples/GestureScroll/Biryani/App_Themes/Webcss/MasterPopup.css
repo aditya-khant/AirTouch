@@ -1,0 +1,718 @@
+ /********************popup*************************/
+
+.regpopback {
+    background-color: rgba(75, 75, 75, 0.31);
+    height: 100%;
+    margin: auto;
+    overflow: auto;
+    position: fixed;
+    text-align: center;
+    top: 0;
+    vertical-align: middle;
+    width: 100%;
+    z-index: 20000;
+     left: 0;
+}
+
+
+
+.Availablitybody {
+    margin: auto;
+    position: relative;
+    top: 40%;
+    width: 300px;
+}
+.Availablityholder {
+    float:left;
+    background-color: #FFFFFF;
+    padding: 0;
+        width: 100%;
+    min-height: 200px;
+      border: solid thin #fff;
+  border-radius: 0px 0px 25px 25px;
+  box-shadow: 2px 2px 20px rgb(149, 8, 1);
+}
+.Availablityholder > p {
+   background-color: #2F2F2F;
+    color: #FFFFFF;
+    font-size: 17px;
+    padding: 8px 4%;
+    text-align:left;
+    margin:0;
+    font-family: "Oswald",sans-serif;
+
+}
+.pinavailable {
+    /*border: 1px solid #AAAAAA;*/
+    height: 30px;
+    margin: 10px auto;
+    width: 90%;
+}
+.pinavailablebtn {
+    background-color: #555555;
+    border: 0 none;
+    color: #FFFFFF;
+    font-size: 15px;
+    margin-bottom: 10px;
+    padding: 4px 6px;
+    text-align: center;
+    width: auto;
+}
+
+a.closeImg, a.closeImg:active {
+    background-image: url('../../images/Close_Box.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 28px auto;
+    color: rgba(48, 48, 48, 0);
+    display: block;
+    float: right;
+    font-family: cursive,arial;
+    font-weight: 700;
+    height: 17px;
+    padding: 3px 7px 0px;
+    position: absolute;
+    right: 1%;
+    text-decoration: none;
+    top: 3%;
+    width: 15px;
+    z-index: 111;
+}
+
+
+
+
+/********************************************other***************************/
+
+.popLoginBtn {
+    background-color: #D00;
+    border: 1px solid #B43C00;
+    color: #FFF;
+    /*float: left;*/
+    font-size: 20px;
+    font-weight: normal;
+    margin-left: 0px;
+    padding: 3px;
+    width: 60%;
+}
+
+
+/************************************signup thank you ********************************/
+
+/********************popup*************************/
+
+.regpopback {
+    background-color: rgba(75, 75, 75, 0.31);
+    height: 100%;
+    margin: auto;
+    overflow: auto;
+    position: fixed;
+    text-align: center;
+    top: 0;
+    vertical-align: middle;
+    width: 100%;
+    z-index: 20000;
+       font-family: "Merienda",cursive;
+     left: 0;
+}
+
+
+
+
+.regpopformrow {
+    float:left;
+    width:100%;
+    min-height:10px;
+}
+/*************popform**************************/
+
+.reglogform {
+    float: left;
+    width: 100%;
+}
+.pophead {
+    border-bottom: 1px solid black;
+    float: left;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    text-align: left;
+    width: 100%;
+}
+
+.pophead > h3 {
+    color: #B43C00;
+    float: left;
+    font-size: 16px;
+}
+a.popformchangebtn {
+    color: #3A6607;
+    float: right;
+    padding: 0 10px;
+    text-decoration: underline;
+      margin: 0 23px;
+}
+
+
+.regpopformrow > ul {
+    padding-left: 38px;
+    text-align: left;
+}
+.poplabel {
+    float: left;
+    margin-bottom: 5px;
+}
+.popinput {
+    border: 1px solid #AAAAAA;
+    border-radius: 3px 3px 3px 3px;
+    float: left;
+    height: 25px;
+   margin: 0 0 10px 0;
+    width: 100%;
+}
+.regpopformrow > input[type="image"] {
+    clear: left;
+    float: left;
+    margin-left: 0;
+    margin-top: 15px;
+    width: 100%;
+}
+.orseparator {
+    background-color: #EEEEEE;
+    float: left;
+    height: 26px;
+    margin: 10px 0;
+    width: 100%;
+}
+.orseparator > span {
+    background-color: #FFFFFF;
+    border-radius: 30px;
+    display: inline-block;
+    margin-left: 0;
+    margin-top: 2px;
+    padding: 4px 3px;
+}
+.forgotlink, .forgotlink:visited {
+    color: #555555;
+    display: block;
+    float: left;
+    padding: 8px;
+    text-align: center;
+    width: 100%;
+}
+
+#forgotpop h4 {
+    font-size: 13px;
+    margin: 10px 0;
+}
+#forgotpop {
+    text-align: left;
+}
+.Txtforgotcls {
+    border: 1px solid #AAAAAA;
+    border-radius: 3px 3px 3px 3px;
+    height: 20px;
+    width: 62%;
+}
+#forgotpop > p {
+    margin-bottom: 10px;
+}
+.popForgotBtn {
+    background-color: #5F8E0C;
+    border: 0 none;
+    border-radius: 5px 5px 5px 5px;
+    color: #FFFFFF;
+    padding: 3px 11px;
+} 
+.popRegtextdiv {
+    background-color: black;
+    float: left;
+        color: white;
+    margin: -6% 0 6px -4.6%;
+    padding: 0;
+    position: relative;
+    width: 109.4%;
+}
+.popRegtextdiv > h3 { 
+    color: #FFFFFF;
+    font-size: 17px;
+    font-weight: normal;
+    margin: 4px 0;
+}
+.popRegtextdiv span {
+    color: #FFFFFF;
+    font-size: 24px;
+    font-weight: bold;
+}
+.popRegtextdiv > p {
+    line-height: 16px;
+    padding: 0 18px;
+    text-align: left;
+}
+
+#regdivId {
+    padding-bottom: 40px;
+}
+.popemailchkdiv {
+    background-color: #DDDDDD;
+    bottom: -1px;
+    float: left;
+    left: -0.5%;
+    padding: 8px 0;
+    position: absolute;
+    width: 100.7%;
+}
+.popemailchkdiv > input[type="checkbox"] {
+    float: left;
+    margin: 0 0 0 8%;
+}
+.popemailchkdiv label {
+    float: left;
+    margin: 1px 15px 1px 11px;
+}
+.regpopholder { 
+    display: block;
+    margin: 14% auto;
+    min-height: 100px;
+   position:relative;
+    width: 265px;
+} 
+.regpopupbody {
+    background-color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    float: left;
+    padding: 4%;
+    width: 99%;
+    position:absolute;
+    z-index:50;
+    box-shadow: 4px 3px 8px #000000;
+}
+.teampopup
+{
+    background-color: #FFFFFF; 
+    outline: 20px solid rgba(39, 39, 39, 0.47);
+    box-shadow: 1px 1px 7px #676767;
+    float: left;
+    padding: 5%;
+    text-align: justify;
+    width: 90%; 
+}
+.teamimgepop {
+    border: 1px solid #EEEEEE;
+    float: left;
+    margin: 0 10% 9px 0;
+    max-width: 350px;
+    width: 100%;
+}
+.teampopup img{
+
+    width:250px;
+    
+}
+.teampopup p {
+    text-align: justify;
+    margin-bottom: 5px;
+}
+.teampopup a img {
+margin: 6px 0;
+}
+
+.teampopup > h2 {
+    color: #b11116;
+       color: #b11116;
+    font-size: 18px;
+    font-weight: bolder;
+    margin: 18px 0;
+
+}
+.teampopid .regpopholder {
+    max-width: 750px;
+    width: 85%;
+     margin-top: 17%;
+}
+.teampopid a.closeImg {
+margin-top: 9px;
+}
+.popLoginBtn {
+    background-color: #2F2F2F;
+    border: 1px solid black; 
+    color: #FFFFFF;
+    float: left;
+    font-size: 20px;
+   
+    margin-left: 0;
+    padding: 3px;
+    width: 100%;
+      font-family: "Oswald",sans-serif;
+}
+a.popLoginBtn, a.popLoginBtn:visited {
+      color: #FFFFFF;
+      text-decoration:none;
+
+}
+.regpopformrow tr {
+    float: left;
+    margin-left: 10px;
+}
+
+a.closeImg, a.closeImg:active { 
+      background-image: url("../../images/Close_Box.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 28px auto;
+    color: rgba(48, 48, 48, 0);
+    display: block;
+    float: right;
+    font-family: cursive,arial;
+    font-weight: 700;
+    height: 32px;
+        padding: 0px 3px 7px;
+   
+    position: absolute;
+    right: 1%;
+    text-decoration: none;
+    top: 1%;
+    width: 32px;
+    z-index: 111;
+}
+a.closeImg:hover {
+    /*color: #C90404;*/
+}
+
+
+
+a.classremove, a.classremove:visited {
+    background-image: url("../../Images/remove_icon.png");
+    background-repeat: no-repeat;
+    background-size: 16px auto;
+    color: #ad2641;
+    display: block;
+    font-size: 11px;
+    float:right;
+    padding: 0 4px 4px 18px;
+}
+
+
+
+
+
+
+
+
+
+
+/*****************************Notice**********************/
+/************Notice*********************/
+.noticepop {
+    background-color: #FFFFFF;
+    margin: 16% auto auto;
+    padding: 10px 18px 23px 14px;
+    position: relative;
+    width: 31%;/**************17-6-2014 changed 25% from 90% *********************/
+    max-width:490px; 
+    box-shadow: 4px 4px 11px #151515;
+}
+
+
+
+ 
+.noticepop > p {
+    border-bottom: 1px solid #DDDDDD;
+    padding: 15px 5px;
+    position: relative;
+}
+.noticepop > a, .noticepop > a:visited {
+    background-color: #292929;
+    color: #FFFFFF;
+    display: block;
+    margin: 4px;
+    padding: 6px;
+    position: relative;
+}
+
+
+
+.noticepopshopdiv {
+    background-color: #FFFFFF;
+    margin: 16% auto auto;
+    padding: 7px 1%;
+    position: relative;
+    width: 25%;/**************17-6-2014 changed 25% from 90% *********************/
+    max-width:490px; 
+    box-shadow: 4px 4px 11px #151515;
+}
+
+
+
+ 
+.noticepopshopdiv > p {
+    border-bottom: 1px solid #DDDDDD;
+    padding: 15px 5px;
+    position: relative;
+}
+.noticepopshopdiv > a, .noticepopshopdiv > a:visited {
+    background-color: #292929;
+    color: #FFFFFF;
+    display: block;
+    margin: 4px;
+    padding: 6px;
+    position: relative;
+}
+
+
+.noticebtnsshopdiv
+{
+background-color: #FFFFFF;
+float: left;
+margin-left: -1.4%;
+padding: 20px 5px;
+width: 100.6%;
+}
+
+.noticebtnsshopdiv a {
+    background-color: #636363;  
+    color: #FFFFFF;
+    float: left;
+    font-size: 15px;
+    margin: 0 0 10px;
+    padding: 9px 5px;
+    text-decoration: none;
+    width: 97.5%;
+}
+
+
+
+
+/**************ntce btn***************/
+/*.noticebtns {
+background-color: #FFFFFF;
+float: left;
+margin-left: -1.4%;
+padding: 20px 5px;
+width: 100.6%;
+}*/
+
+.noticebtns {
+background-color: #FFFFFF;
+float: left;
+margin-left: -14px;
+padding: 20px 5px;
+width: 105.3%;
+}
+
+.noticebtns a {
+    background-color: #636363;  
+    color: #FFFFFF;
+    float: left;
+    font-size: 15px;
+    margin: 0 0 10px;
+    padding: 9px 5px;
+    text-decoration: none;
+    width: 97.5%;
+}
+a.chkoutbtn, a.chkoutbtn:visited {
+    background-color: #b11116;
+    border: medium none;
+    color: #FFFFFF;
+    float: right;
+    font-size: 15px;
+    margin: 0;
+    text-decoration: none;
+}
+.shoplistbody #noticediv1 {
+background-color: rgba(255, 255, 255, 0.9);
+}
+
+.shoplistbody .noticepop {
+background-color: rgba(255, 255, 255, 0);
+margin: 0 auto auto;
+padding: 7px 1%; 
+width: 98%;
+max-width: none; 
+box-shadow:0 0 0;
+}
+.shoplistbody .noticepop > p {
+border-bottom: 1px solid #DDDDDD;
+padding: 43px 5px;
+position: relative;
+}
+.shoplistbody .noticebtns {
+background-color: rgba(255, 255, 255, 0);
+float: left;
+margin-left: -1.4%;
+padding: 20px 3%;
+width: 95.6%;
+}
+
+.usernote {
+  clear: right;
+  color: white;
+  /*font-weight: bold;*/
+  float: left;
+  display: inline-block;
+  width: 100%;
+  margin-top: 0px;
+  position: relative;
+  font-family: Arial;
+  right: 1px;
+  text-align: left;
+  top: 1px;
+      font-size: 17px;
+}
+
+.usernote.mobi {
+    float: left;
+    margin-top: -7px;
+        display: block;
+}
+.usernote > strong {
+   color: white;
+    font-weight: 500;
+    font-size: 17px;
+}
+/***********************/
+.logoutsassiondiv{
+    display:none;
+    max-width: 35%;
+    width: 23%;
+    float: left;
+    margin-top: 4px;
+    background-image: url(/Images/bullet-arrow-social.png);
+    vertical-align: bottom;
+    background-repeat: no-repeat;
+        max-height: 27px;
+    background-size: 27px;
+    padding-left: 0px;
+    position: relative;
+} 
+.usernote span {/* color:#fff; *//* font-weight: bold; */}
+
+
+.logoutsassiondiv ul {
+    background-color: #950000;
+    margin: 0;
+    float: left;
+    top: 25px;
+    width: 75%;
+    position: absolute;
+    margin-left: -13px;
+    list-style: none;
+        padding: 2px 5px 0 0px;
+    display:none;
+    z-index: 1;
+}
+.logoutsassiondiv:hover ul 
+{
+    display:block;
+        font-family: arial;
+}
+.logoutsassiondiv > ul > li > a {
+    padding: 3px 4%;
+    width: 91%;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+
+.Availablityholder > h4 {
+    font-size: 16px;
+    margin: 10px 0;
+}
+.Availablityholder > h4 b {
+    font-size: 32px;
+}
+ 
+.regpopholder.ordrinvcpop {
+    max-width: 500px;
+    width: 100%;
+}
+.invoiceholderpop {
+    
+    float: left;
+    padding-bottom: 10%;
+    width: 99%;
+}
+.invoiceholderpopiner{
+    background-color: #FFFFFF;
+    float: left;
+    padding: 1%;
+    width: 99%;
+}
+.invoiceholderpopiner.evntnotice >strong {
+    background-color: #505050;
+    display: block;
+    width: 99%;
+    padding: 1%;
+    font-size: 17px;
+    margin: -11px 0 10px;
+    color: #fff;
+}
+.invoiceholderpopiner.evntnotice {
+    padding: 3%;
+    width: 96%;
+}
+
+
+
+.pinavailablebtn {
+    background-color: #555555;
+    border: 0 none;
+    color: #FFFFFF;
+    font-size: 15px;
+    margin-bottom: 10px;
+    padding: 4px 6px;
+    text-align: center;
+    width: auto;
+}
+
+
+
+
+#Div10.noticepop {
+    max-width: 633px;
+    padding: 16px 10px;
+}
+
+#Div10 > p {
+    padding: 10px 0 22px;
+}
+
+#Div10 .noticebtns {
+    background-color: #FFFFFF;
+    float: left;
+    margin-left: -11px;
+    padding: 24px 10px;
+    width: 100%;
+    box-shadow: 4px 8px 7px #151515;
+    border:1px solid #000;
+    border-top:0; 
+}
+.noticepop > a, .noticepop > a:visited {
+    background-color: #292929;
+    color: #FFFFFF;
+    display: block;
+    margin: 4px;
+    padding: 6px;
+    position: relative;
+}
+
+
+
+/**************************************************Team page************************/
+
+
+
+
+.regpopbackOfMyfriends {
+    
+    height: 100%;
+    margin: auto;
+    overflow: auto;
+    position: fixed;
+    text-align: center;
+    top: 0;
+    vertical-align: middle;
+    width: 100%;
+    z-index: 20000;
+     left: 0;
+}
+

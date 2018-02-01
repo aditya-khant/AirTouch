@@ -1,0 +1,240 @@
+<!doctype html>
+	<!-- This page is demonstration of Gesture Scroll through a webpage containing a recipe of Vegetable Biryani -->
+    <html>
+    <head>
+	<link href='https://fonts.googleapis.com/css?family=Ubuntu+Condensed' rel='stylesheet' type='text/css'/>
+	<script src='App_Themes/js/ExternalScript/jquery.js'></script>
+    <script type='text/javascript' src='App_Themes/js/ExternalScript/HomeScript/DFPHeaderScriptRecipeHtmlNew.js'></script>
+     <meta charset='utf-8'>
+     <meta name='viewport' content='width=device-width, initial-scale=1'><meta property='og:title' content='Vegetable Hyderabadi Biryani Vegetarian Recipe | KhaanaKhazana |  by Master Chef Sanjeev Kapoor.'/><meta property='og:description' content='how to make Vegetable Hyderabadi Biryani-A popular Hyderabadi biryani having mixed vegetables marinated in spicy yogurt and cooked with rice.'/><meta property='og:url' content='http://www.sanjeevkapoor.com/Recipe/Vegetable-Hyderabadi-Biryani.html'/><meta property='og:site_name' content='sanjeev kapoor' /> <meta name='keywords' content='Master Chef Sanjeev Kapoor,veg biryani,biryani recipe,hyderabad,vegetarian recipe,Veg recipe'/> <meta name='description' content='how to make Vegetable Hyderabadi Biryani-A popular Hyderabadi biryani having mixed vegetables marinated in spicy yogurt and cooked with rice.'/><meta property='article:author' content='Sanjeev Kapoor' /><meta name='COPYRIGHT' content='&copy;2013 www.sanjeevkapoor.com'/>  <meta id='metaOpenGraphSiteName' property='og:site_name' content='www.sanjeevkapoor.com'></meta> <meta property='og:image' content=/images/No_image2.gif /><meta name='twitter:card' content='summary_large_image'><meta name='twitter:site' content='@SanjeevKapoor'><meta name='twitter:creator' content='@SanjeevKapoor'><meta name='twitter:title' content='Vegetable-Hyderabadi-Biryani'><meta name='twitter:description' content='how to make Vegetable Hyderabadi Biryani'><meta name='twitter:image' content='http://www.sanjeevkapoor.com/'/><meta name='twitter:url' content='http://www.sanjeevkapoor.com/Recipe/Vegetable-Hyderabadi-Biryani.html'/><title>Vegetable Hyderabadi Biryani Vegetarian Recipe | KhaanaKhazana |  by Master Chef Sanjeev Kapoor.</title>
+                    
+                   <link href='App_Themes/Webcss/MasterPopup.css' rel='stylesheet'  type='text/css' />
+                   <link href='App_Themes/Webcss/bootstrap.css' rel='stylesheet'  type='text/css' />
+                   <link href='App_Themes/Webcss/SKstyle.css' rel='stylesheet'  type='text/css' />
+      
+                    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'></script>
+                    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js'></script>
+                    <script src='App_Themes/js/ExternalScript/Autocomhtmlsearch.js'></script>      
+                        
+                       
+	
+ 	<!-- Initialize supporting libraries -->
+	<script src="../../common/js/compatibility.js"></script>
+	<script src="../../common/js/smoother.js"></script>
+	<!-- Initialize the fist detection libraries-->
+	<script src="../../common/js/humandetect.js"></script>
+	<script src="../../common/js/humandetect.handfist.js"></script>
+
+<script>
+	window.onload = function() {
+				var canvas = $('<canvas style="position: fixed; z-index: 1001;top: 10px; right: 10px; opacity: 0.9">').get(0),
+					context = canvas.getContext('2d'), // retrieve the 2D context of canvas (neded for drawing the video overlay)
+					video = document.createElement('video'), //create the element for video overlay 
+					detector, //create the element for detection 
+					fist_pos_old; // Declaration of variable that reduces false positives
+				
+				document.getElementsByTagName('body')[0].appendChild(canvas);
+				
+				/**
+     			* Checks for WebRTC compatibility of the browser. 
+    			* AirTouch needs WebRTC for accessing video camera. 
+    			*/
+				try {
+					compatibility.getUserMedia({video: true}, function(stream) {
+						try {
+							video.src = compatibility.URL.createObjectURL(stream);
+						} catch (error) {
+							video.src = stream;
+						}
+						compatibility.requestAnimationFrame(play);
+					}, function (error) {
+						alert("WebRTC not available");
+					});
+				} catch (error) {
+					alert(error);
+				}
+				/**
+				 * Executes the detection after the camera starts getting a video feed.
+				 * Inputs: void
+				 * Outputs: void  
+				 */
+				function play() {
+					compatibility.requestAnimationFrame(play);
+					if (video.paused) video.play();
+					
+					if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+						
+						/* Prepare the detector once the video dimensions are known: */
+			          	if (!detector) {
+				      		var width = ~~(80 * video.videoWidth / video.videoHeight);
+							var height = 80;
+				      		detector = new humandetect.detector(width, height, 1.1, humandetect.handfist);
+				      	}
+			      	
+						/* Draw video overlay: */
+						  context.save();
+            			  context.scale(-1, 1);
+			              var newwidth = ~~(200 * video.videoWidth / video.videoHeight);
+			              context.translate(-newwidth , 0);
+			              var newheight = 200;
+			              context.drawImage(video, newwidth, 0, -newwidth, newheight);
+			              context.restore();
+									
+						
+						var coords = detector.detect(video, 1);
+						if (coords[0]) {
+							var coord = coords[0];
+							
+							/* Rescale coordinates from detector to video coordinate space: */
+							coord[0] *= video.videoWidth / detector.canvas.width;
+							coord[1] *= video.videoHeight / detector.canvas.height;
+							coord[2] *= video.videoWidth / detector.canvas.width;
+							coord[3] *= video.videoHeight / detector.canvas.height;
+						
+							/* Find coordinates with maximum confidence: */
+							var coord = coords[0];
+							for (var i = coords.length - 1; i >= 0; --i)
+								if (coords[i][4] > coord[4]) coord = coords[i];
+							
+							/**
+							 * Checks if the fist's position jumps out of bounds. 
+							 * If it does do not scroll
+							 * Else scroll the page proportionately
+							 */ 
+							var fist_pos = [coord[0] + coord[2] / 2, coord[1] + coord[3] / 2];
+							if (fist_pos_old) {
+								var dx = (fist_pos[0] - fist_pos_old[0]) / video.videoWidth,
+										dy = (fist_pos[1] - fist_pos_old[1]) / video.videoHeight;
+								
+									window.scrollBy(dx * 100, dy * 100);
+
+									
+							} else fist_pos_old = fist_pos;
+							
+							/* Draw coordinates on video overlay: */
+							context.beginPath();
+							context.lineWidth = '2';
+							context.fillStyle = 'rgba(0, 255, 255, 0)';
+							context.fillRect(
+								coord[0] / video.videoWidth * canvas.clientWidth,
+								coord[1] / video.videoHeight * canvas.clientHeight,
+								coord[2] / video.videoWidth * canvas.clientWidth,
+								coord[3] / video.videoHeight * canvas.clientHeight);
+							context.stroke();
+						} else fist_pos_old = null;
+					}
+				}
+			};
+	</script>
+    
+</head>
+
+ <body>
+ <a href="../../../index.html">
+	<!-- code from a website -->
+	<img src="cooltext146912891773254.png" onmouseover="this.src='cooltext146912891773254.png'" onmouseout="this.src='cooltext146912891773254.png'" /></a>
+	<br>
+ <div class="col-md-8 col-xs-12 col-md-12">
+                              <div><h2 itemprop="name">Vegetable Hyderabadi Biryani Recipe - A popular Hyderabadi biryani having mixed vegetables marinated in spicy yogurt and cooked with rice.</h2><span itemprop="author" style="display:none;">Sanjeev Kapoor</span> <div class=" col-xs-12 col-md-12 htmlsubtitle col-sm-12"><h3>This is an exclusive website recipe.</h3><div class="col-xs-12 col-md-12 htmlinneroffset col-sm-12"><div class="col-md-12 col-xs-12 col-sm-12"><h4 class="clrlightgray">Main Ingredients : <span class="clrblack"> <a target="_blank" href="../ingredientssearch.aspx?search=Basmati rice&amp;course=&amp;cusine=">Basmati rice</a>, <a target="_blank" href="../ingredientssearch.aspx?search=Potatoes&amp;course=&amp;cusine="> Potatoes</a></span></h4><h4 class="clrlightgray">Cuisine : <span class="clrblack"><a target="_blank" href="../Allrecipes/Cuisines/Hyderabadi">Hyderabadi</a></span></h4><h4 class="clrlightgray">Course : <span class="clrblack"><a target="_blank" href="../Allrecipes/course/Rice">Rice</a></span></h4><div class=" col-xs-12 col-md-12 htmlsubtitle"><div class=" col-xs-12 col-md-12 htmlsubtitle"> <h3 class="pull-right htmlvegnonvegs">  <a href="#" class="vegicon"> <img src="../Images/veg-icon.png"></a></h3></div><div class="col-md-12 col-xs-12 col-sm-12">
+                           <div class=" col-xs-12 col-md-12 imgproduct col-sm-12"><img src="../images/No_image2.gif" alt="Vegetable Hyderabadi Biryani" class="recipimg" itemprop="image"></div></div><div class="col-md-12 col-xs-12 col-sm-12">
+                        <div class="htmlmidad1">
+                            
+ 
+
+  <div id="div-gpt-ad-1446101012711-2">
+<script type="text/javascript">
+    if ($(window).width() >= 728) {
+        googletag.cmd.push(function () { googletag.display('div-gpt-ad-1446101012711-2'); });
+
+    } else {
+        $('#div-gpt-ad-1446101012711-2').hide();
+
+    }
+</script>
+</div>
+
+
+                        </div>
+
+                    </div><div class="col-md-12 lineheight col-xs-12 col-sm-12">
+
+                        <h4> 
+                        </h4>
+
+                    </div>
+        
+     <div class="col-md-12 col-xs-12 col-sm-12">
+                          <div class="col-md-12 col-xs-12 col-sm-12">
+
+                       <h1 class="dancef hidden-xs">Vegetable Hyderabadi Biryani Recipe - how to make Vegetable Hyderabadi Biryani</h1><div class="col-md-12 col-xs-12 col-sm-12">
+                             <div class="htmlmidadlong">
+
+                             
+
+  <div id="div-gpt-ad-1446101012711-3">
+<script type="text/javascript">
+    if ($(window).width() >= 728) {
+        googletag.cmd.push(function () { googletag.display('div-gpt-ad-1446101012711-3'); });
+
+    } else {
+        $('#div-gpt-ad-1446101012711-3').hide();
+
+    }
+</script>
+</div>
+
+ 
+                                 
+
+
+ <div class="col-md-12 col-xs-12 preptime col-sm-12" style="background-color:#EBDBBA"><div class="col-md-6 col-xs-12 col-sm-6"><h4><b>Prep Time :</b> <meta itemprop="prepTime" content="PT40M">31-40 minutes</h4></div><div class="col-md-6 col-xs-12 col-sm-6"><h4><b>Cook time :</b> <meta itemprop="cookTime" content="PT50M">41-50 minutes</h4></div> <div class="col-md-6 col-xs-12 col-sm-6"><h4><b>Serve :</b> <span itemprop="recipeYield">4</span>  </h4></div>  <div class="col-md-6 col-xs-12 col-sm-6"><h4><b>Level Of Cooking :</b> <span itemprop="recipeYield">Medium</span>  </h4></div> </div>
+                              <div class="col-md-12 col-xs-12 col-sm-12">
+                                  <div class="ingredients">
+                                      <h1 class="dancef">Ingredients</h1>
+
+                                  </div><div class="ingredientlist"><ul class="list-unstyled"><li><h4><span itemprop="ingredients">Basmati rice </span>1 1/2  cups</h4></li><li><h4><span itemprop="ingredients">Potatoes 1/2 inch cubes</span>2 large</h4></li><li><h4><span itemprop="ingredients">Carrots 1/2 inch cubes</span>3 medium</h4></li><li><h4><span itemprop="ingredients">French beans 1/2 inch pieces</span>5-6  </h4></li><li><h4><span itemprop="ingredients">Cauliflower </span>1/4 small</h4></li><li><h4><span itemprop="ingredients">Salt  </span> to taste</h4></li><li><h4><span itemprop="ingredients">Saffron (kesar) </span>4-5 strands</h4></li><li><h4><span itemprop="ingredients">Milk  </span>2 tablespoons</h4></li><li><h4><span itemprop="ingredients">Onions thinly sliced</span>4 large</h4></li><li><h4><span itemprop="ingredients">Oil  </span> to deep fry</h4></li><li><h4><span itemprop="ingredients">Yogurt </span>1/2 cup</h4></li><li><h4><span itemprop="ingredients">Biryani masala </span>3 tablespoons</h4></li><li><h4><span itemprop="ingredients">Ginger paste  </span>1 1/2 teaspoons</h4></li><li><h4><span itemprop="ingredients">Garlic paste  </span>1 1/2 teaspoons</h4></li><li><h4><span itemprop="ingredients">Pure ghee </span>4 tablespoons</h4></li><li><h4><span itemprop="ingredients">Fresh mint leaves chopped </span>2 tablespoons</h4></li><li><h4><span itemprop="ingredients">Fresh coriander leaves chopped </span>2 tablespoons</h4></li><li><h4><span itemprop="ingredients">Cashewnuts quartered </span>5  </h4></li><li><h4><span itemprop="ingredients">Almonds blanched and halved</span>10  </h4></li><li><h4><span itemprop="ingredients">Raisins  </span>2 tablespoons</h4></li><li><h4><span itemprop="ingredients">Wheat flour dough to seal </span> as required</h4></li></ul></div></div>   <div class="col-md-12 col-xs-12  col-sm-12 hidden-xs">
+                        <div class="htmlmidad">
+                             
+ 
+
+  <div id="div-gpt-ad-1446101012711-4">
+<script type="text/javascript">
+    if ($(window).width() >= 728) {
+        googletag.cmd.push(function () { googletag.display('div-gpt-ad-1446101012711-4'); });
+
+    } else {
+        $('#div-gpt-ad-1446101012711-4').hide();
+
+
+</script>
+</div>
+
+                        </div>
+
+                    </div><div class="htmlmob3ad visible-xs"><div class="ad300X250Global_AD2_onmobilehtml">
+
+  <div id="div-gpt-ad-1439981022044-1" style="display: none;">
+<script type="text/javascript">
+    if ($(window).width() < 468 && $(window).width() >= 320) {
+        googletag.cmd.push(function () { googletag.display('div-gpt-ad-1439981022044-1'); });
+        
+    } else {
+        $('#div-gpt-ad-1439981022044-1').hide();
+    }
+</script>
+</div>
+
+
+</div>
+</div><div class="col-md-12 col-xs-12"><div class="bestcookedin"><h1 class="dancef">Nutrition Info</h1><h4 class="h4"><a>Calories : 2861</a></h4>  <h4 class="h4"><a>Carbohydrates : 399.8</a></h4>  <h4 class="h4"><a>Protein : 47.2</a></h4>  <h4 class="h4"><a>Fat : 119.4</a></h4></div></div> <div class="col-md-12 col-xs-12 col-sm-12"> <div class="method">
+                                      <h1 class="dancef">Method</h1>
+
+                                  </div>
+                        <div class="methodlist">
+
+   <div class="step">  <h4>Step 1</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Pick, wash and soak rice in three cups of water for half an hour. Drain. </h4></div>   <div class="step">  <h4>Step 2</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Add four cups of water and salt. Bring to a boil and cook till the rice is three fourth done. </h4></div>   <div class="step">  <h4>Step 3</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Drain excess water and spread out on a plate to cool. Parboil potatoes, carrots, French beans and cauliflower in two cups of salted water. </h4></div>   <div class="step">  <h4>Step 4</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Drain and keep aside. Dissolve saffron in warm milk. Heat sufficient oil in a kadai and deep-fry sliced onions till golden brown. Drain onto an absorbent paper. Beat yogurt. Add two tablespoons of Biryani Masala, half of the fried onions, ginger paste and garlic paste and parboiled vegetables. Allow to marinate for one hour. Heat ghee in a thick-bottomed vessel, add the marinated vegetables and sauté for two to three minutes. </h4></div>   <div class="step">  <h4>Step 5</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Add three-fourth cup of water and bring to a boil, then simmer for two to three minutes. Preheat oven to 180°C. </h4></div>   <div class="step">  <h4>Step 6</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Transfer the vegetables into a thick bottomed handi. Layer the rice over the cooked vegetables. </h4></div>   <div class="step">  <h4>Step 7</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Sprinkle the remaining Biryani Masala, mint leaves, coriander leaves and the remaining fried onions. Garnish with cashewnuts, almonds and raisins. </h4></div>   <div class="step">  <h4>Step 8</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Sprinkle saffron milk. Place a moist cloth on top, cover with a lid and seal with dough. </h4></div>   <div class="step">  <h4>Step 9</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Put the sealed handi in the pre-heated oven and cook at 180°C for fifteen to twenty minutes. </h4></div>   <div class="step">  <h4>Step 10</h4> </div><div class="stepdetail"><h4 itemprop="recipeInstructions">Alternately keep the handi on a heated tawa and cook on very low heat for fifteen to twenty minutes. Serve hot.</h4></div></div></div>  </div></div></div></div></div></div></div></div></div>
+
+ 
+ </body>
+
+</html>

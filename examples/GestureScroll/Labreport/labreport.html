@@ -1,0 +1,1292 @@
+<html>
+<head>
+<!-- This page is demonstration of Gesture Scroll through a webpage containing an experiment report -->
+<title>Experiment Report</title>
+<!-- Initialize supporting libraries -->
+<script src="../../common/js/compatibility.js"></script>
+<script src="../../common/js/smoother.js"></script>
+<!-- Initialize the fist detection libraries-->
+<script src="../../common/js/humandetect.js"></script>
+<script src="../../common/js/humandetect.handfist.js"></script>
+
+<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'></script>
+<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js'></script>
+
+<script>
+window.onload = function() {
+			var canvas = $('<canvas style="position: fixed; z-index: 1001;top: 10px; right: 10px; opacity: 0.9">').get(0),
+				context = canvas.getContext('2d'), // retrieve the 2D context of canvas (neded for drawing the video overlay)
+				video = document.createElement('video'), //create the element for video overlay 
+				detector, //create the element for detection 
+				fist_pos_old; // Declaration of variable that reduces false positives
+			
+			document.getElementsByTagName('body')[0].appendChild(canvas);
+			
+			/**
+			 * Checks for WebRTC compatibility of the browser. 
+			* AirTouch needs WebRTC for accessing video camera. 
+			*/
+			try {
+				compatibility.getUserMedia({video: true}, function(stream) {
+					try {
+						video.src = compatibility.URL.createObjectURL(stream);
+					} catch (error) {
+						video.src = stream;
+					}
+					compatibility.requestAnimationFrame(play);
+				}, function (error) {
+					alert("WebRTC not available");
+				});
+			} catch (error) {
+				alert(error);
+			}
+			/**
+			 * Executes the detection after the camera starts getting a video feed.
+			 * Inputs: void
+			 * Outputs: void  
+			 */
+			function play() {
+				compatibility.requestAnimationFrame(play);
+				if (video.paused) video.play();
+				
+				if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+					
+					/* Prepare the detector once the video dimensions are known: */
+					  if (!detector) {
+						  var width = ~~(80 * video.videoWidth / video.videoHeight);
+						var height = 80;
+						  detector = new humandetect.detector(width, height, 1.1, humandetect.handfist);
+					  }
+				  
+					/* Draw video overlay: */
+					  context.save();
+					  context.scale(-1, 1);
+					  var newwidth = ~~(200 * video.videoWidth / video.videoHeight);
+					  context.translate(-newwidth , 0);
+					  var newheight = 200;
+					  context.drawImage(video, newwidth, 0, -newwidth, newheight);
+					  context.restore();
+								
+					
+					var coords = detector.detect(video, 1);
+					if (coords[0]) {
+						var coord = coords[0];
+						
+						/* Rescale coordinates from detector to video coordinate space: */
+						coord[0] *= video.videoWidth / detector.canvas.width;
+						coord[1] *= video.videoHeight / detector.canvas.height;
+						coord[2] *= video.videoWidth / detector.canvas.width;
+						coord[3] *= video.videoHeight / detector.canvas.height;
+					
+						/* Find coordinates with maximum confidence: */
+						var coord = coords[0];
+						for (var i = coords.length - 1; i >= 0; --i)
+							if (coords[i][4] > coord[4]) coord = coords[i];
+						
+						/**
+						 * Checks if the fist's position jumps out of bounds. 
+						 * If it does do not scroll
+						 * Else scroll the page proportionately
+						 */ 
+						var fist_pos = [coord[0] + coord[2] / 2, coord[1] + coord[3] / 2];
+						if (fist_pos_old) {
+							var dx = (fist_pos[0] - fist_pos_old[0]) / video.videoWidth,
+									dy = (fist_pos[1] - fist_pos_old[1]) / video.videoHeight;
+							
+								window.scrollBy(dx * 100, dy * 100);
+
+								
+						} else fist_pos_old = fist_pos;
+						
+						/* Draw coordinates on video overlay: */
+						context.beginPath();
+						context.lineWidth = '2';
+						context.fillStyle = 'rgba(0, 255, 255, 0)';
+						context.fillRect(
+							coord[0] / video.videoWidth * canvas.clientWidth,
+							coord[1] / video.videoHeight * canvas.clientHeight,
+							coord[2] / video.videoWidth * canvas.clientWidth,
+							coord[3] / video.videoHeight * canvas.clientHeight);
+						context.stroke();
+					} else fist_pos_old = null;
+				}
+			}
+		};
+</script>
+
+</head>
+
+<body>
+<a href="../../../index.html">
+<!-- code from a website -->
+	<img src="cooltext146912891773254.png" onmouseover="this.src='cooltext146912891773254.png'" onmouseout="this.src='cooltext146912891773254.png'" /></a>
+
+
+<body bgcolor="#FFFFFF" text="#000000" link="#000099" vlink="990000" alink="#990000">
+
+
+
+<BR>
+
+
+
+<a name="start">
+
+
+
+<META name="description" content="Sample Lab Report in the Writing Guidelines for Engineering and Science Students: guidelines to help students of science and engineering make their writing more efficient for others to read and to make the process of writing more efficient for them to perform.">
+
+
+
+<META name="keywords" content=" engineering writing, engineers, formal, lab, laboratory, report, scientists, scientific writing, tech writing, technical writing, writing"><P>
+
+
+
+
+
+
+
+
+
+
+<font size=+1> <b>Design of a Temperature Measurement and Display System<br> 
+
+
+
+Using the 68HC11 Microcontroller</b></font><br>
+
+
+
+<br>
+
+
+
+<a name="introduction">
+
+
+
+<br>
+
+
+
+<b>Introduction</b><br>
+
+
+
+<br>
+
+
+
+<dd>	This report presents a design of a temperature measurement and display system that incorporated the Motorola 68HC11 microcontroller, simply referred to here as the HC11. This design was a valuable experience because similar temperature measurement and display systems often are used in buildings and vehicles [Spasov, 1996]. The design presented in this report made use of the HC11's analog-to-digital (A/D) converter and the serial subsystems. As shown in Figure 1, the design included a temperature sensor connected to one of the HC11's A/D input pins on Port E, and light emitting diodes (LEDs) connected to Port B. These LEDs acted as temperature indicators. Additionally, the design included a connection between the HC11 and a remote personal computer (PC). This connection served to send messages regarding temperature to the PC. An assembly software program developed for this design performed various functions for using the added hardware.  <p>
+
+
+
+<dd>The design had two main objectives. The first objective was to use the HC11 to measure temperature. Included in this objective was the task of connecting the temperature sensor and the LEDs to the HC11. Also included in this objective was the task of designing software to do the following: initialize the A/D converter and serial subsystems; control the measurement and storage of temperature in a RAM variable called TEMP; and control the display of temperature on the LED outputs. The second objective of the design was to use the HC11 to indicate if the temperature went outside of prescribed limits: below 20 degrees Fahrenheit or above 90 degrees Fahrenheit. Included in this objective was the task of connecting the HC11 to a remote PC terminal through an RS-232 connection. Another task within this objective was developing software to initialize the serial subsystem. The final task of this objective was to create subroutines for the software program of the first objective to have the HC11 send a message to the PC if the measured temperature went outside the stated limits. <p>
+
+
+
+<dd>	This report first presents the procedures for and assessment of the design to have the HC11 measure temperature. Then the report discusses the procedures for and assessment of adding a serial output to the HC11 design to communicate whether the temperature is outside of prescribed limits. <p>
+
+
+
+
+
+
+
+<center>
+
+
+
+<img src="pictures/fig1.gif"><P>
+
+
+
+</center>
+
+
+
+<font size=2>
+
+
+
+<blockquote>
+
+
+
+<b>Figure 1.</b>	Temperature measurement and display system developed for the Motorolla 68HC11 microcontroller, which is attached to a universal evaluation board (EVBU). </font></blockquote>
+
+
+
+
+
+
+
+
+
+
+
+<br>
+
+
+
+<a name="middle">
+
+
+
+<br>
+
+
+
+<b>Connecting a Temperature Measurement Circuit to the HC11</b> <br>
+
+<br>
+
+<dd> Connecting a temperature measurement circuit to the HC11 microcontroller involved both hardware and software. Hardware was added to control the measurement and display of the temperature. Software served to control this added hardware. In performing the testing and design for this part of the project, my laboratory partner and I divided the work in the following way. My partner assumed the lead role in connecting the hardware, and I assumed the lead role in writing the programs. Although one of us had a lead role in performing either the hardware or the software, we worked collaboratively in checking both the hardware and software and in troubleshooting any problems.
+
+<br>
+
+
+
+<a name="procedures">
+
+
+
+<br>
+
+<dd><b>Procedures for Design.</b> The hardware for the temperature measurement circuit included both a temperature sensor attached to Port E and LEDs attached to Port B. The circuit, which is shown in Figure A-1 of Appendix A, was designed according to the specifications obtained from the Computer Engineering Laboratories web site for ECPE 4535 [Lineberry, 2001].<p>  
+
+<dd> Within the circuit was an LM3911 temperature controller integrated circuit (IC), the output of which we connected to a non-inverting op-amp. The output of this op-amp attached to the HC11 A/D input pin E2 through a 1000-ohm resistor. The circuitry was scaled so that 0 volts out corresponded to 0 degrees and 5 volts out corresponded to 110 degrees. To each of the output pins of Port B, we connected LEDs using a 74HC244 buffer IC and 330-ohm current limiting resistors, all of which are shown in Figure A-1. The LEDs were located in the breadboard area of the trainer kits. <p>
+
+
+
+<dd>To control this added hardware, we programmed the HC11 following the pseudo code and program listing given in Appendices B and C, respectively. The program shown in Appendix C consisted of three subroutines that were called from the main program (Main). The three subroutines
+
+were named Startup, GetTemp, and SetDisp. The Startup subroutine was used to enable the A/D converter subsystem. First the A/D charge
+
+pump was powered up by setting bit 7 of the Option register. Then, bit 6 was cleared so that the charge pump used the system E-clock [Spasov, 1996]. After
+
+a 100 microsecond delay to allow the charge pump to stabilize, the control word $22 was written to the ADCTL register to start continuous,
+
+single-scan conversions on pin E2 of Port E. <p>
+
+
+
+
+
+<dd>The subroutine GetTemp was used to input and scale the analog voltage from the temperature sensor circuit. The register ADR3 held the
+
+result of the A/D conversions, which was treated as an 8-bit binary fraction between 0 and 1. This value was loaded into accumulator A and
+
+then multiplied by a scale factor of 110 using the MUL instruction. The result of this multiplication was a 16-bit number between 0 and 110, with
+
+an 8-bit integer portion stored in accumulator A and an 8-bit fractional portion stored in accumulator B. The integer portion of the temperature
+
+was then stored in the RAM variable TEMP. <P>
+
+
+
+
+
+
+
+<dd>The subroutine SetDisp controlled the lighting of the LEDs connected to Port B. The amount of lighting was based on the present value of
+
+TEMP. First, TEMP was loaded into accumulator A and compared with the value 20, the designated cut-off for low temperature. Accumulator
+
+B was cleared to zero and represented the initial value to be written to Port B. If the value in accumulator A was greater than or equal to 20,
+
+then the value in accumulator B was shifted one position left and incremented, and 10 was subtracted from accumulator A. The process then
+
+repeated itself as long as the value in accumulator A was greater than or equal to 20. An abbreviated form of this process appears in Figure 2
+
+(the complete process appears in Appendix C). After the number of LEDs to turn on were determined, as shown in Figure 2, the number of
+
+bits indicated by the count value in accumulator B were set high on Port B beginning with bit 0 [Motorola, 1991]. <p>
+
+
+
+
+
+
+
+<center>
+
+
+
+<img src="pictures/fig2.gif"><P>
+
+
+
+</center>
+
+
+
+<font size=2>
+
+
+
+<blockquote>
+
+
+
+<b>Figure 2.</b>	Flowchart illustrating the determination of the number of Port B bits to enable for the LED display. </font></blockquote>
+
+
+
+<br>
+
+
+
+<a name="assessment">
+
+
+
+<br>
+
+<dd><b>Assessment of Design.</b> 	To test the operation of the GetTemp and SetDisp subroutines, we measured the actual temperature with a temperature probe and compared that with the measured value represented by the LED display indicators at several different temperature settings. Table 1 shows the results of the measurement comparison, where the actual temperatures measured are shown on the left, and the temperatures represented by the number of LEDs lit are shown on the right. From Table 1, we verified that the developed hardware and software for this part of the lab were functioning properly. Overall, this section of the laboratory went smoothly. <p>
+
+
+
+
+
+
+
+<B>Table 1.</b> Comparison of temperature measurements.
+
+
+
+<table border cellspacing=1 cellpadding=6 width=300>
+
+
+
+<tr> <th align=left> </b> <font size=2> Actual Temperature </font> </th>
+
+
+
+<th align=left> </b> <font size=2> Number of LEDs Lit </font> </th>
+
+
+
+</tr>
+
+
+
+<tr>
+
+
+
+<th align=left></b> <font size=2> 15&deg;F </font> </th>
+
+
+
+<th align=left> </b> <font size=2> 0 </font> </th>
+
+
+
+</tr>
+
+
+
+<tr>
+
+
+
+<th align=left> </b> <font size=2>28&deg;F </font> </th>
+
+
+
+<th align=left> </b> <font size=2> 1 </font> </th>
+
+
+
+</tr>
+
+
+
+<tr>
+
+
+
+<th align=left> </b> <font size=2>33&deg;F </font> </th>
+
+
+
+<th align=left> </b> <font size=2> 2 </font> </th>
+
+
+
+</tr>
+
+
+
+<tr> <th align=left> </b> <font size=2>56&deg;F </font> </th>
+
+
+
+<th align=left> </b> <font size=2> 4 </font> </th>
+
+
+
+</tr>
+
+
+
+<tr> <th align=left> </b> <font size=2>110&deg;F </font> </th>
+
+
+
+<th align=left> </b> <font size=2> 8 </font> </th>
+
+
+
+</tr>
+
+
+
+</table>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<b>Adding Serial Output to the HC11</b> <br>
+
+<br>
+
+<dd>This section presents the addition of four subroutines to the existing software developed in the previous section. The added subroutines,
+
+listed in Appendix D, were called InitSCI, SendChar, SendMsg, and CheckLimits. The InitSCI subroutine initialized the serial subsystem of the
+
+HC11 so that it could communicate with the host PC at 9600 baud [Spasov, 1996]. This initialization was done by writing control words to the BAUD, SCCR1,
+
+and SCCR2 control registers in the HC11 as shown in Appendix C.<p>
+
+<dd> In performing the testing and design for this part of the project, my laboratory partner and I divided the work in the following way. My partner assumed the lead role in connecting the hardware, and I assumed the lead role in writing the programs. Although one of us had a lead role in performing either the hardware or the software, we worked collaboratively in checking both the hardware and software and in troubleshooting any problems. 
+
+
+
+
+
+
+
+<br>
+
+<br>
+
+
+
+<dd><b>Procedures for Design.</b> The first subroutine, SendChar, was added to send a single data byte from the HC11 to the remote PC terminal. The data
+
+byte to be sent was contained in accumulator A. After waiting for the TDRE bit in the SCSR register to be set, indicating that the HC11 is
+
+ready to transmit another byte, the value in accumulator A was written to the SCDR register to begin the transmission [Motorola, 1991]. <p>
+
+
+
+<dd>The second subroutine, SendMsg, used the SendChar subroutine to write character strings to the remote PC terminal. Before calling SendMsg, the X
+
+index register was set to point to the beginning of the character string to be sent. The SendMsg subroutine then sent out the string by calling
+
+SendChar for each character until the NULL character was reached, which marked the end of a string. <P>
+
+ 
+
+
+
+
+
+<dd>The third and final subroutine, CheckLimits, was added to the existing software program to check the temperature range. The subroutine
+
+CheckLimits called SendMsg to print the following message if TEMP was less than 20 degrees Fahrenheit: "Temperature is very low." If
+
+TEMP was greater that 90 degrees Fahrenheit, CheckLimits called SendMsg to print the following message: "Temperature is very high." If
+
+TEMP was between 20 and 90 degrees Farenheit, CheckLimits called SendMsg to print the following message: "Temperature is acceptable."
+
+A flag variable called FLG ensured that the messages were not repeatedly sent for each entry into the very hot, very cold, or acceptable
+
+temperature regions. FLG was set to zero if TEMP was between 20 and 90 degrees, one if TEMP was less than 20 degrees, and two if TEMP
+
+was greater than 90 degrees. <br>
+
+
+
+<br>
+
+
+
+
+
+<dd><b>Assessment of Design.</b> While developing the design presented in this section, several mistakes and difficulties were encountered. The initial
+
+setup of the serial subsystem of the 68HC11 involved some troubleshooting. We also had problems with sending the alarm messages more
+
+than one time because a flag variable was not set. The diagnosis and solutions to these problems are discussed in this section. <p>
+
+
+
+<dd>Initially, the serial writes from the 68HC11 to the host PC did not work properly because the SendChar routine did not check the TDRE bit
+
+before writing to the SCDR register. This caused characters to be dropped when sending a message. We also had a problem sending out
+
+messages using SendMsg because we did not terminate the message strings correctly with the NULL zero. By adding the NULL zero to the
+
+end of the strings, the sending of messages worked as expected. <p>
+
+
+
+<dd>A final problem was the output rate of the alarm messages. At first, we did not set a flag to indicate to the program that a message had already
+
+been sent to the PC. This failure caused messages to be continually sent to the PC terminal when the temperature was outside of the normal
+
+operating region. This problem was fixed by making a variable called FLG that was set as soon as the alarm message was sent and then
+
+cleared when the temperature returned to the normal operating region. <br>
+
+
+
+
+
+
+
+<a name="conclusions">
+
+
+
+
+
+
+
+<b>Conclusions</b><br>
+
+
+
+<br>
+
+
+
+<dd>This report has discussed the development of a temperature measurement and display system. The objectives of this lab were to develop the
+
+necessary hardware and software to have the HC11 measure temperature and indicate whether that temperature fell outside of prescribed
+
+limits. Both objectives were met. By keeping track of the measured temperature, the HC11 was able to control an LED temperature display.
+
+Also, if the temperature became very cold or hot, the HC11 sent an alarm message to a host PC terminal. <p>
+
+
+
+
+
+
+
+<dd>This lab has introduced us to the important topics of A/D conversion and serial communications. In the lab, an A/D converter allowed us
+
+access to analog inputs of temperature from a remote computer. Besides temperature measurement, A/D converters have many applications in
+
+automatic control systems and factory automation. For example, in an electric motor drive, the phase currents and flux are continually
+
+measured by using scaling circuitry and an A/D converter input to a microprocessor. <br>
+
+
+
+<br>
+
+
+
+<a name="appendices">
+
+
+
+<hr width=535>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<font size=+1> <b> Appendix A:  Hardware Schematic </b></font><br>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<dd> Figure A-1 presents the hardware schematic for the temperature circuit. The circuit was designed according to the specifications obtained from the Computer Engineering Laboratories web site for ECPE 4535 [Lineberry, 2001].<P>
+
+<center>
+
+
+
+<img src="pictures/figa1.gif"><P>
+
+
+
+</center>
+
+
+
+<font size=2>
+
+
+
+<blockquote>
+
+
+
+<b>Figure A-1.</b>	Hardware schematic for the temperature measurement circuit designed for this lab. In an actual report, all the connections, pin numbers, and pin labels should be shown. </font></blockquote>
+
+
+
+<p>
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+
+
+<hr width=535>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<font size=+1> <b> Appendix B:  Pseudocode for the Software Developed </b></font><br>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+XXXXXXXXXXXXXXXXXX*<br>
+
+
+
+XXXXXXXXXX<br>
+
+
+
+XXXXXXXXX<br>
+
+
+
+XXXXXXXXXXXXXXXXXXXXXX<br>
+
+
+
+XXXXXXXXXXXXXX<br>
+
+
+
+XXXXXXXXXXXX<br>
+
+
+
+XXXXXXXXXXXXXXXXXX<br>
+
+
+
+XXXXXXXXXX<br>
+
+
+
+XXXXXXXXX<br>
+
+
+
+XXXXXXXXXXXXXXXXXXXXXX<br>
+
+
+
+XXXXXXXXXXXXXX<br>
+
+
+
+XXXXXXXXXXXX<br>
+
+
+
+<P>
+
+
+
+<font size=2>*In an actual report, the pseudocode would appear here. Also note that some professors allow you to substitute <a href="appendixb.html">an appendix </a> with program flow charts for this appendix. </font><P>
+
+
+
+<br>
+
+
+
+<hr width=535>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<font size=+1> <b> Appendix C: Program Listing </b></font><br>
+
+
+
+<br>
+
+
+
+<br>
+
+</td>
+
+
+
+</tr>
+
+
+
+</table>
+
+
+
+
+
+<pre>
+
+Assembler release TER_2.0 version 2.09
+
+(c) Motorola (free ware)
+
+0001                         ;**************************************************
+
+0002                         ; Temp_Monitor: This program implements a temperature
+
+0003                         ; measurement and display system. The A/D system is 
+
+0004                         ; used to read an analog temperature. The value is
+
+0005                         ; scaled to Farenheit, and displayed on an LED bar
+
+0006                         ; display. If the temperature is above 90 or below
+
+0007                         ; 20, a message is transmitted over the serial link.
+
+0008                         ; Programmer: JMB
+
+0009                         ;*************************************************
+
+0010                         
+
+0011                         ; Define some I/O registers
+
+0012 1004                    PORTB		EQU	$1004
+
+0013 102b                    BAUD		EQU	$102B
+
+0014 102c                    SCCR1		EQU	$102C
+
+0015 102d                    SCCR2		EQU	$102D
+
+0016 102e                    SCSR		EQU	$102E
+
+0017 102f                    SCDR		EQU	$102F
+
+0018 1030                    ADCTL		EQU	$1030
+
+0019 1031                    ADR1		EQU	$1031
+
+0020 1032                    ADR2		EQU	$1032
+
+0021 1033                    ADR3		EQU	$1033
+
+0022 1034                    ADR4		EQU	$1034
+
+0023 1039                    OPTION		EQU	$1039
+
+0024                         
+
+0025                         ; Define some constants
+
+0026 005a                    UPPER_LIMIT	EQU	90	; upper temperature limit
+
+0027 0014                    LOWER_LIMIT	EQU	20	; lower temperature limit
+
+0028 0002                    HOT		EQU	2	; flag value indicating 
+
+0029                         				;    temperature  UPPER_LIMIT
+
+0030 0001                    COLD		EQU	1	; flag value indicating
+
+0031                         				;    temperature < LOWER_LIMIT
+
+0032 0000                    OK		EQU	0	; flag value indicating
+
+0033                         				;    temperature is within limits
+
+0034 000d                    CR		EQU	$0D	; ASCII code for carraige return
+
+0035 000a                    LF		EQU	$0A	; ASCII code for line feed
+
+0036                         
+
+0037                         ; Variables
+
+0038 0100                    	ORG	$100		; place in RAM area
+
+0039 0100                    TEMP	rmb	1		; current temperature
+
+0040 0101                    FLAG	rmb	1		; flag indicating system state
+
+0041                         				;    (HOT, COLD, or OK)
+
+0042                         
+
+0043 b600                    	ORG	$B600		; EEPROM area
+
+0044                         ;***************************************************
+
+0045                         ; Temp_Monitor: This routine initializes the system, and
+
+0046                         ; then enters an endless loop. In this loop, it reads
+
+0047                         ; the current temperature, updates the LEDs, and then 
+
+0048                         ; sends a message to the serial link, if necessary.
+
+0049                         ; Input: none
+
+0050                         ; Output: none
+
+0051                         ; Registers/variables modified: ACCA, ACCB, CCR, TEMP, FLAG
+
+0052                         ;****************************************************
+
+0053                         Temp_Monitor:
+
+0054 b600 8e 01 ff           	lds	#$1FF		; initialize stack pointer
+
+0055 b603 bd b6 11           	jsr	Startup		; initialize A/D and SCI,
+
+0056                         				;   initialize RAM variables
+
+0057                         Main:
+
+0058 b606 bd b6 1d           	jsr	GetTemp		; get current temperature
+
+0059 b609 bd b6 29           	jsr	SetDisp		; update LED display
+
+0060 b60c bd b6 3c           	jsr	CheckLimits	; check upper and lower limits
+
+0061 b60f 20 f5              	bra	Main		; repeat
+
+0062                         
+
+0063                         
+
+0064                         
+
+0065                         ;****************************************************
+
+0066                         ; Startup: This routine initializes the system. It calls
+
+0067                         ; other routines to initialize the A/D system and the 
+
+0068                         ; SCI system. It also initializes the FLAG variable.
+
+0069                         ; Input: none
+
+0070                         ; Output: none
+
+0071                         ; Registers/variables modified: ACCA, IX, CCR, FLAG
+
+0072                         ;****************************************************
+
+0073                         Startup:
+
+0074 b611 bd b6 7c           	jsr	InitAD		; power up the A/D system
+
+0075 b614 bd b6 a2           	jsr	InitSCI		; initialize the serial interface
+
+0076                         	
+
+0077 b617 86 00              	ldaa	#OK		; initialize FLAG
+
+0078 b619 b7 01 01           	staa	FLAG
+
+0079                         
+
+0080 b61c 39                 	rts
+
+0081                         
+
+0082                         ;****************************************************
+
+0083                         ; GetTemp: This routine gets the current temperature.
+
+0084                         ; It reads the A/D value, converts it to Farenheit, 
+
+0085                         ; and stores the result in TEMP. An A/D value of $00
+
+0086                         ; corresponds to 0 degrees, and $FF (actually $100) 
+
+0087                         ; is 110 degrees, so the A/D value is multiplied by 
+
+0088                         ; 110 to convert to temperature.
+
+0089                         ; Input: none
+
+0090                         ; Output: New temperature stored in TEMP
+
+0091                         ; Registers/variables modified: ACCA, ACCB, CCR, TEMP
+
+0092                         ;****************************************************
+
+0093                         GetTemp:
+
+0094 b61d b6 10 31           	ldaa	ADR1		; read A/D value
+
+0095 b620 c6 6e              	ldab	#110		; multiply by 110 
+
+0096 b622 3d                 	mul			;  to get temperature
+
+0097 b623 89 00              	adca	#$00		; round to 8 bits
+
+0098                         
+
+0099 b625 b7 01 00           	staa	TEMP		; store new temperature 
+
+0100                         
+
+0101 b628 39                 	rts
+
+0102                         
+
+0103                         ;****************************************************
+
+0104                         ; SetDisp: This routine updates the LEDs to display 
+
+0105                         ; the current temperature. The LEDs are arranged as a
+
+0106                         ; bar display with a range of 20 - 90 degrees, in 10 
+
+0107                         ; degree steps. This routine determines how many of the
+
+0108                         ; LEDs should be turned on based on the current temperature.
+
+0109                         ; Input: TEMP variable
+
+0110                         ; Output: none
+
+0111                         ; Registers/variables modified: ACCA, ACCB, CCR
+
+0112                         ;****************************************************
+
+0113                         SetDisp:
+
+0114 b629 c6 00              	ldab	#$00		; all LEDs off initially
+
+0115 b62b b6 01 00           	ldaa	TEMP		; get current temperature
+
+0116                         	
+
+0117                         SD_Loop:
+
+0118 b62e 81 14              	cmpa	#20		; is value  20?
+
+0119 b630 25 06              	blo	Update_LEDs	; branch if not
+
+0120 b632 58                 	lslb			; else, turn on next LED
+
+0121 b633 5c                 	incb			
+
+0122 b634 80 0a              	suba	#10		; value = value - 10
+
+0123 b636 20 f6              	bra	SD_Loop		; repeat
+
+0124                         
+
+0125                         Update_LEDs:
+
+0126 b638 f7 10 04           	stab	PORTB		; update the LEDs
+
+0127                         
+
+0128 b63b 39                 	rts
+
+0129                         
+
+0130                         ;****************************************************
+
+0131                         ; CheckLimits: This routine checks to see if the current
+
+0132                         ; temperature is within the upper and lower limits. If 
+
+0133                         ; not, then a warning message is transmitted over the 
+
+0134                         ; serial link. 
+
+0135                         ; Input: TEMP, FLAG
+
+0136                         ; Output: none
+
+0137                         ; Register/variables modified: ACCA, ACCB, IX, CCR
+
+0138                         ;****************************************************
+
+0139                         CheckLimits:
+
+0140 b63c b6 01 00           	ldaa	TEMP		; get current temperature
+
+0141 b63f 81 5a              	cmpa	#UPPER_LIMIT	; temp  upper limit?
+
+0142 b641 23 12              	bls	Check_Lower	; branch if not
+
+0143 b643 c6 02              	ldab	#HOT		; have we already sent a 
+
+0144                         				;   warning for this?
+
+0145 b645 f1 01 01           	cmpb	FLAG		;   (i.e., is FLAG == HOT?)
+
+0146 b648 27 31              	beq	CL_Exit		; branch if so (don't repeat
+
+0147                         				;   warning message)
+
+0148 b64a f7 01 01           	stab	FLAG		; update flag
+
+0149 b64d ce b6 e2           	ldx	#HOT_MSG	; send "hot" warning message
+
+0150 b650 bd b6 c5           	jsr	SendMsg		
+
+0151 b653 20 26              	bra	CL_Exit		; and exit
+
+0152                         
+
+0153                         Check_Lower:
+
+0154 b655 81 14              	cmpa	#LOWER_LIMIT	; temp $102F<br>
+
+</pre>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<table BORDER=0 CELLSPACING=0 Cellpadding=0 WIDTH=535>
+
+<TR>
+
+
+
+<TD width=535 valign=top>
+
+<a name="references">
+
+
+
+<hr width=535>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<br>
+
+
+
+<font size=+1> <b>References</b></font><br>
+
+
+
+<br>
+
+
+<br>
+
+Lineberry, Bob, "Computer Engineering Laboratories Website at Virginia Tech," <i>http://www.ee.vt.edu/cel  </I> (Blacksburg, VA: ECE Department, 1998), ECpE 4535: Laboratory Assignments, Lab X.<br>
+
+
+
+<br>
+
+
+
+Motorola Corporation, <I>M68HC11 E Series: Reference Manual,</I> rev. 3 (Oak Hill, Texas: Motorola Corp. 1991), chapters 9 and 12.<br>
+
+<br>
+
+Spasov, Peter, <I>Microcontroller Technology: The 68HC11, </I> 2nd ed. (Englewood Cliffs, NJ: Prentice Hall, 1996), pp. 107, 355-359, 460.<p>
+
+
+
+<br>
+
+<br>
+
+</td>
+
+</tr>
+
+</table>
+
+<left><img align=bottom src="pictures/bar1.gif" width=535></left>
+
+
+
+<P>
+
+
+
+<br>
+
+
+
+<table BORDER=0 CELLSPACING=0 Cellpadding=0 WIDTH=535>
+
+
+
+<TR>
+
+
+
+<TD width=335 valign=top>
+
+
+
+<FONT SIZE="1"> 
+
+
+
+Last updated 1/00<br>
+
+
+
+http://writing.eng.vt.edu/ <br>
+
+
+
+</font>
+
+
+
+</td>
+
+
+
+
+
+
+
+<td width=200 align=right valign=top> <a href="laboratory.html "><img border=0 src="pictures/back.gif"></a> </td>
+
+
+
+</tr>
+
+
+
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

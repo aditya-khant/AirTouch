@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<!-- This page is demonstration of Gesture 3D to rotate a Buckminster Fullerene model -->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>C-60 Fullerene</title>
+  <link rel='stylesheet' type='text/css' href='../common/css/x3dom.css'></link>
+  <!-- Initialize the 3D DOM library -->
+	<script src='../common/js/x3dom.js'></script>
+  <!-- Initialize supporting libraries -->
+	<script src="../common/js/compatibility.js"></script>
+	<script src="../common/js/smoother.js"></script>
+	<!-- Initialize the fist detection libraries-->
+	<script src="../common/js/humandetect.js"></script>
+	<script src="../common/js/humandetect.handfist.js"></script>
+	
+	<script>
+	window.onload = function() {
+	  compatibility.getUserMedia 
+		var smoother = new Smoother([0.9995, 0.9995], [0, 0], 0),
+			canvas = document.getElementById('canvas'), // retrieve the canvas 
+			context = canvas.getContext('2d'), // retrieve the 2D context of canvas (neded for drawing the video overlay)
+			video = document.createElement('video'), //create the element for video overlay 
+			detector; //create the element for detection 
+    
+    /**
+     * Checks for WebRTC compatibility of the browser. 
+     * AirTouch needs WebRTC for accessing video camera. 
+    */
+		try {
+			compatibility.getUserMedia({video: true}, function(stream) {
+				try {
+					video.src = compatibility.URL.createObjectURL(stream);
+				} catch (error) {
+					video.src = stream;
+				}
+				compatibility.requestAnimationFrame(play);
+			}, function (error) {
+				alert("Error code 0xc7145: The system is not compatible. I am working on it to bring this to all available systems.");
+			});
+		} catch (error) {
+			alert(error);
+		}
+
+    var fist_pos_old, angle = [0, 0]; // Declaration of variables that reduce false positives
+    
+		/**
+     * Executes the detection after the camera starts getting a video feed.
+     * Inputs: void
+     * Outputs: void   
+     */
+		function play() {
+			compatibility.requestAnimationFrame(play);
+			if (video.paused) video.play();
+	        
+	    // Draw video overlay:
+			context.save();
+			context.scale(-1, 1);
+			var newwidth = ~~(200 * video.videoWidth / video.videoHeight);
+			context.translate(-newwidth , 0);
+			var newheight = 200;
+			context.drawImage(video, newwidth, 0, -newwidth, newheight);
+			context.restore();
+			if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+			
+				// Prepare the detector once the video dimensions are known:
+	          	if (!detector) {
+		      		var width = ~~(140 * video.videoWidth / video.videoHeight);
+					    var height = 140;
+		      		detector = new humandetect.detector(width, height, 1.1, humandetect.handfist);
+		      	}
+          		
+        // Smooth rotation of the 3D object:
+				angle = smoother.smooth(angle);
+				document.getElementById('transform_a').setAttribute('rotation', '0 1 0 ' + angle[0]); 
+				document.getElementById('transform_b').setAttribute('rotation', '1 0 0 ' + angle[1]);
+		
+
+			  // Perform the actual detection - see more in humandetect.js:
+				var coords = detector.detect(video, 1);
+				
+				if (coords[0]) {
+					var coord = coords[0];
+					
+					// Rescale coordinates from detector to video coordinate space:
+					coord[0] *= -video.videoWidth / detector.canvas.width;
+					coord[1] *= video.videoHeight / detector.canvas.height;
+					coord[2] *= -video.videoWidth / detector.canvas.width;
+					coord[3] *= video.videoHeight / detector.canvas.height;
+          
+          // Form a bounding box from co-ordinates:
+					var fist_pos = [coord[0] + coord[2] / 2, coord[1] + coord[3] / 2];
+          
+          /**
+           * Checks if the fist's position jumps out of bounds. 
+           * If it does do not rotate the model
+           * Else rotate the model proportionately
+           */  
+					if (fist_pos_old) {
+
+						var dx = (fist_pos[0] - fist_pos_old[0]) / video.videoWidth,
+							dy = (fist_pos[1] - fist_pos_old[1]) / video.videoHeight,
+              jump_x = fist_pos[0] - fist_pos_old[0],
+                  jump_y = fist_pos[1] - fist_pos_old[1];
+            
+          if (Math.abs(jump_x)< 20 && Math.abs(jump_y)< 50){
+	
+                  if (dx*dx + dy*dy < 0.2) {
+                    angle[0] += 5.0 * dx;
+                    angle[1] += 5.0 * dy;
+                          }
+              }
+                  fist_pos_old = fist_pos;
+          } else  {
+            fist_pos_old = fist_pos; 	
+						
+					} 
+				
+					// Draw coordinates on video overlay:
+					context.beginPath();
+					context.lineWidth = '2';
+					context.fillStyle = fist_pos_old ? 'rgba(0, 0, 255, 0)' : 'rgba(255, 0, 0, 0)'; //To see co-ordinates change alpha to > 0.25
+					context.fillRect(
+						coord[0] / video.videoWidth * newwidth,
+						coord[1] / video.videoHeight * canvas.clientHeight,
+						coord[2] / video.videoWidth * newwidth,
+						coord[3] / video.videoHeight * canvas.clientHeight);
+					context.stroke();
+				} else fist_pos_old = null;
+				
+			}
+		}
+	};
+    </script>
+</head>
+
+<body>
+  <!-- Contains the generated output from X3DOM -->
+	<h1>C-60 Fullerene: Bucky Ball</h1>
+	<a href="../../index.html">
+	<img src="cooltext146912891773254.png" onmouseover="this.src='cooltext146912891773254.png'" onmouseout="this.src='cooltext146912891773254.png'" /></a>
+	 <x3d id='x3dElement' showStat='false' showLog='false' style='width:100%; height:100%; border:0; margin:0; padding:0;'>
+      <scene DEF='scene'>
+        <worldInfo info='"HAs Centre"' title='Bucky Ball (C-60)'></worldInfo>
+        <navigationInfo avatarSize='0' type='"EXAMINE" "ANY"'></navigationInfo>
+        <collision collide='false'>
+				<viewpoint id="viewpoint_a" position='0 0 12'></viewpoint>
+		<transform id="transform_a" translation="0 0 0" rotation="1 0 0 0" scale="1 1 1">
+		<transform id="transform_b" translation="0 0 0" rotation="1 0 0 0" scale="1 1 1">
+		
+	           <shape>
+			    <shape DEF='AOPT_Shape_793000256'>
+                <appearance DEF='AOPT_Appearance_787903440'>
+                  <material DEF='mat_145_145_145' diffuseColor='0.569 0.569 0.569' specularColor='0.8 0.8 0.8'></material>
+                </appearance>
+                <sphere DEF='sphere'></sphere>
+              </shape>
+			</shape>
+		 <transform scale='0.5 0.5 0.5' translation='2.2353 -2.1923 -1.3456'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='2.5544 -1.0336 -2.0045'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.6759 -0.4986 -2.9248'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='0.4842 -1.126 -3.1795'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='0.1629 -2.2928 -2.5157'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.4579 0.854 -2.9568'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='0.1315 1.0624 -3.231'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-0.4702 -0.161 -3.369'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='2.1157 1.6818 -2.0694'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.445 2.7142 -1.4649'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='0.1096 2.9226 -1.743'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-0.5448 2.0997 -2.621'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='2.988 1.1506 -1.1557'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='3.2079 -0.2118 -1.1241'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.8184 1.908 -2.1552'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.426 0.6767 -2.2923'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.7524 -0.3544 -2.8959'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.0712 -1.513 -2.237'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.1102 -2.4852 -2.0467'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='0.3015 -3.3451 -0.5685'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.0243 -3.1352 -0.8434'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.9422 -1.1997 -1.2249'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-3.1593 0.1518 -1.2618'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.9565 2.6175 -0.9872'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-0.7615 3.2462 -0.7324'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.9053 2.8183 -0.1794'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='2.8579 1.854 0.0147'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='3.2921 -0.8625 0.0789'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='2.6915 -2.0864 -0.0577'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.952 -2.6107 0.9833'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='0.7605 -3.2381 0.7289'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.8989 -2.8187 0.1766'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.8542 -1.8561 -0.0143'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-3.3036 0.8625 -0.0821'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.7165 2.0979 0.0476'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-0.294 3.3721 0.5654'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.0326 3.1453 0.8449'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='2.944 1.1967 1.225'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='3.1585 -0.1556 1.2571'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='2.4273 -0.678 2.2907'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.8209 -1.9102 2.1551'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-0.1085 -2.9265 1.7433'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.4435 -2.7163 1.4643'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.9954 -1.1577 1.1594'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-3.2357 0.206 1.1237'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.2704 2.2153 1.3085'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.0247 2.8766 1.5769'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.131 2.5061 2.0572'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='2.0806 1.5154 2.2445'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='1.761 0.3534 2.9046'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='0.5488 -2.1071 2.6219'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.1213 -1.6902 2.0761'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-2.6075 1.0058 2.0001'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-0.1113 2.3172 2.5297'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-0.4455 1.1059 3.2244'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='0.4819 0.1503 3.3959'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-0.1291 -1.0716 3.2432'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.4636 -0.8745 2.9819'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform scale='0.5 0.5 0.5' translation='-1.6904 0.4486 2.9538'>
+              <shape USE='AOPT_Shape_793000256'></shape>
+            </transform>
+            <transform rotation='0 1 0 1.3603' translation='1.6353 -2.5082 -1.4738'>
+              <transform rotation='1 0 0 1.09532' scale='0.2 1.38019 0.2'>
+                <shape DEF='AOPT_Shape_793507504'>
+                  <appearance USE='AOPT_Appearance_787903440'></appearance>
+                  <cylinder bottom='false' top='false' height='1'></cylinder>
+                </shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.3603' translation='1.34135 -2.36252 -1.75719'>
+              <transform DEF='AOPT_Transform_793543888' rotation='1 0 0 1.09532' scale='0.04 0.207028 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.3603' translation='1.76135 -2.14139 -1.66745'>
+              <transform USE='AOPT_Transform_793543888'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.3603' translation='1.50925 -2.87501 -1.28015'>
+              <transform USE='AOPT_Transform_793543888'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.3603' translation='1.92925 -2.65388 -1.19041'>
+              <transform USE='AOPT_Transform_793543888'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37931' translation='0.5991 -2.55845 -2.05885'>
+              <transform rotation='1 0 0 1.17269' scale='0.2 1.37048 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37931' translation='0.980902 -2.38061 -1.96025'>
+              <transform DEF='AOPT_Transform_793531568' rotation='1 0 0 1.17269' scale='0.04 0.205572 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37931' translation='0.675562 -2.19466 -2.28005'>
+              <transform USE='AOPT_Transform_793531568'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37931' translation='0.522638 -2.92224 -1.83765'>
+              <transform USE='AOPT_Transform_793531568'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37931' translation='0.217298 -2.73629 -2.15745'>
+              <transform USE='AOPT_Transform_793531568'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617416' translation='0.6684 -3.0846 -1.08525'>
+              <transform rotation='1 0 0 1.96079' scale='0.2 1.37041 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617415' translation='1.04697 -2.88211 -1.03238'>
+              <transform DEF='AOPT_Transform_793765280' rotation='1 0 0 1.96079' scale='0.04 0.205562 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617416' translation='0.790143 -3.06446 -0.670657'>
+              <transform USE='AOPT_Transform_793765280'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617416' translation='0.546657 -3.10474 -1.49984'>
+              <transform USE='AOPT_Transform_793765280'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617416' translation='0.289827 -3.28709 -1.13812'>
+              <transform USE='AOPT_Transform_793765280'></transform>
+            </transform>
+            <transform rotation='0 1 0 2.69059' translation='2.39485 -1.61295 -1.67505'>
+              <transform rotation='1 0 0 0.563496' scale='0.2 1.37061 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 2.69059' translation='2.02596 -1.83026 -1.73692'>
+              <transform DEF='AOPT_Transform_793773904' rotation='1 0 0 0.563497' scale='0.04 0.205591 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 2.69059' translation='2.13765 -1.42472 -1.96753'>
+              <transform USE='AOPT_Transform_793773904'></transform>
+            </transform>
+            <transform rotation='0 1 0 2.69059' translation='2.65205 -1.80118 -1.38257'>
+              <transform USE='AOPT_Transform_793773904'></transform>
+            </transform>
+            <transform rotation='0 1 0 2.69059' translation='2.76374 -1.39564 -1.61318'>
+              <transform USE='AOPT_Transform_793773904'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340429' translation='2.4634 -2.13935 -0.70165'>
+              <transform rotation='1 0 0 1.49344' scale='0.2 1.37041 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.340429' translation='2.09137 -2.33206 -0.809208'>
+              <transform DEF='AOPT_Transform_793791152' rotation='1 0 0 1.49344' scale='0.04 0.205561 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.340429' translation='2.25104 -2.29499 -0.358443'>
+              <transform USE='AOPT_Transform_793791152'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340429' translation='2.67576 -1.98371 -1.04486'>
+              <transform USE='AOPT_Transform_793791152'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340429' translation='2.83543 -1.94664 -0.594092'>
+              <transform USE='AOPT_Transform_793791152'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37943' translation='2.11515 -0.7661 -2.46465'>
+              <transform rotation='1 0 0 1.17274' scale='0.2 1.3802 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37943' translation='2.03979 -1.13058 -2.24236'>
+              <transform DEF='AOPT_Transform_793985088' rotation='1 0 0 1.17274' scale='0.04 0.207029 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37943' translation='1.73231 -0.943333 -2.56447'>
+              <transform USE='AOPT_Transform_793985088'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37943' translation='2.49799 -0.588867 -2.36483'>
+              <transform USE='AOPT_Transform_793985088'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.37943' translation='2.19051 -0.401617 -2.68694'>
+              <transform USE='AOPT_Transform_793985088'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.63854' translation='2.88115 -0.6227 -1.5643'>
+              <transform rotation='1 0 0 0.927602' scale='0.2 1.37023 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.63854' translation='2.73447 -1.01634 -1.46119'>
+              <transform DEF='AOPT_Transform_793996176' rotation='1 0 0 0.927602' scale='0.04 0.205534 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.63854' translation='2.9632 -0.728711 -1.15305'>
+              <transform USE='AOPT_Transform_793996176'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.63854' translation='2.7991 -0.516689 -1.97555'>
+              <transform USE='AOPT_Transform_793996176'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.63854' translation='3.02783 -0.229059 -1.66741'>
+              <transform USE='AOPT_Transform_793996176'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78136' translation='1.08005 -0.8123 -3.05215'>
+              <transform rotation='1 0 0 2.04625' scale='0.2 1.37064 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78136' translation='1.37251 -0.958735 -2.76903'>
+              <transform DEF='AOPT_Transform_794228352' rotation='1 0 0 2.04625' scale='0.04 0.205596 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78136' translation='0.955417 -1.17833 -2.85818'>
+              <transform USE='AOPT_Transform_794228352'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78136' translation='1.20468 -0.446275 -3.24612'>
+              <transform USE='AOPT_Transform_794228352'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78136' translation='0.787588 -0.665865 -3.33527'>
+              <transform USE='AOPT_Transform_794228352'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71654' translation='1.5669 0.1777 -2.9408'>
+              <transform rotation='1 0 0 0.16148' scale='0.2 1.37043 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71655' translation='1.83652 -0.015258 -2.66298'>
+              <transform DEF='AOPT_Transform_794230816' rotation='1 0 0 0.161479' scale='0.04 0.205564 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71655' translation='1.76022 0.458152 -2.67418'>
+              <transform USE='AOPT_Transform_794230816'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71655' translation='1.37358 -0.102752 -3.20742'>
+              <transform USE='AOPT_Transform_794230816'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71655' translation='1.29728 0.370658 -3.21862'>
+              <transform USE='AOPT_Transform_794230816'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450791' translation='0.32355 -1.7094 -2.8476'>
+              <transform rotation='1 0 0 2.57794' scale='0.2 1.38032 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450791' translation='0.692814 -1.49061 -2.78658'>
+              <transform DEF='AOPT_Transform_794240672' rotation='1 0 0 2.57794' scale='0.04 0.207048 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450792' translation='0.580359 -1.89899 -2.55425'>
+              <transform USE='AOPT_Transform_794240672'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450791' translation='0.066741 -1.51981 -3.14095'>
+              <transform USE='AOPT_Transform_794240672'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450792' translation='-0.045714 -1.92819 -2.90862'>
+              <transform USE='AOPT_Transform_794240672'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.7668' translation='0.007 -0.6435 -3.27425'>
+              <transform rotation='1 0 0 0.789542' scale='0.2 1.37041 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.7668' translation='0.421691 -0.556788 -3.18692'>
+              <transform DEF='AOPT_Transform_794444304' rotation='1 0 0 0.789542' scale='0.04 0.205561 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.7668' translation='0.087651 -0.219038 -3.25324'>
+              <transform USE='AOPT_Transform_794444304'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.7668' translation='-0.073651 -1.06796 -3.29526'>
+              <transform USE='AOPT_Transform_794444304'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.7668' translation='-0.407691 -0.730212 -3.36158'>
+              <transform USE='AOPT_Transform_794444304'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21783' translation='-0.47365 -2.389 -2.2812'>
+              <transform rotation='1 0 0 1.71167' scale='0.2 1.37031 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21783' translation='-0.118504 -2.51847 -2.07093'>
+              <transform DEF='AOPT_Transform_794450464' rotation='1 0 0 1.71167' scale='0.04 0.205547 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21783' translation='-0.564089 -2.58581 -1.90678'>
+              <transform USE='AOPT_Transform_794450464'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21783' translation='-0.383211 -2.19219 -2.65562'>
+              <transform USE='AOPT_Transform_794450464'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21783' translation='-0.828796 -2.25953 -2.49147'>
+              <transform USE='AOPT_Transform_794450464'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77465' translation='0.7947 0.9582 -3.0939'>
+              <transform rotation='1 0 0 1.41813' scale='0.2 1.37038 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77465' translation='0.973925 0.565934 -3.06046'>
+              <transform DEF='AOPT_Transform_794701920' rotation='1 0 0 1.41813' scale='0.04 0.205558 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77465' translation='0.509685 0.638874 -3.15643'>
+              <transform USE='AOPT_Transform_794701920'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77465' translation='1.07972 1.27753 -3.03137'>
+              <transform USE='AOPT_Transform_794701920'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77465' translation='0.615475 1.35047 -3.12734'>
+              <transform USE='AOPT_Transform_794701920'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.637888' translation='1.7868 1.2679 -2.5131'>
+              <transform rotation='1 0 0 0.927679' scale='0.2 1.38037 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.637888' translation='1.83719 0.837458 -2.52468'>
+              <transform DEF='AOPT_Transform_794703152' rotation='1 0 0 0.92768' scale='0.04 0.207056 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.637888' translation='2.06742 1.12719 -2.21409'>
+              <transform USE='AOPT_Transform_794703152'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.637888' translation='1.50618 1.40861 -2.81211'>
+              <transform USE='AOPT_Transform_794703152'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.637888' translation='1.73641 1.69834 -2.50152'>
+              <transform USE='AOPT_Transform_794703152'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79625' translation='-0.16935 0.4507 -3.3'>
+              <transform rotation='1 0 0 2.67427' scale='0.2 1.37033 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79625' translation='0.250942 0.502658 -3.2119'>
+              <transform DEF='AOPT_Transform_794711776' rotation='1 0 0 2.67427' scale='0.04 0.205549 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79625' translation='0.040347 0.074468 -3.2602'>
+              <transform USE='AOPT_Transform_794711776'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79625' translation='-0.379047 0.826932 -3.3398'>
+              <transform USE='AOPT_Transform_794711776'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79625' translation='-0.589642 0.398742 -3.3881'>
+              <transform USE='AOPT_Transform_794711776'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836896' translation='-0.20665 1.58105 -2.926'>
+              <transform rotation='1 0 0 0.720532' scale='0.2 1.38039 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836895' translation='0.212221 1.49252 -2.85771'>
+              <transform DEF='AOPT_Transform_794891696' rotation='1 0 0 0.720532' scale='0.04 0.207058 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836895' translation='-0.024484 1.85557 -2.64421'>
+              <transform USE='AOPT_Transform_794891696'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836895' translation='-0.388816 1.30653 -3.20779'>
+              <transform USE='AOPT_Transform_794891696'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836895' translation='-0.625521 1.66958 -2.99429'>
+              <transform USE='AOPT_Transform_794891696'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21732' translation='-1.1113 -0.2577 -3.13245'>
+              <transform rotation='1 0 0 1.71137' scale='0.2 1.38031 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21732' translation='-0.790766 -0.545934 -3.08632'>
+              <transform DEF='AOPT_Transform_794895392' rotation='1 0 0 1.71137' scale='0.04 0.207047 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21732' translation='-1.23954 -0.613624 -2.92074'>
+              <transform USE='AOPT_Transform_794895392'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21732' translation='-0.983064 0.098224 -3.34416'>
+              <transform USE='AOPT_Transform_794895392'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.21732' translation='-1.43183 0.030534 -3.17858'>
+              <transform USE='AOPT_Transform_794895392'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.837265' translation='1.78035 2.198 -1.76715'>
+              <transform rotation='1 0 0 0.718592' scale='0.2 1.37153 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.837264' translation='1.5973 1.92493 -2.04845'>
+              <transform DEF='AOPT_Transform_794917568' rotation='1 0 0 0.718593' scale='0.04 0.20573 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.837264' translation='1.36255 2.28627 -1.83688'>
+              <transform USE='AOPT_Transform_794917568'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.837264' translation='2.19815 2.10973 -1.69742'>
+              <transform USE='AOPT_Transform_794917568'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.837263' translation='1.9634 2.47107 -1.48585'>
+              <transform USE='AOPT_Transform_794917568'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.762222' translation='2.55185 1.4162 -1.61255'>
+              <transform rotation='1 0 0 1.96886' scale='0.2 1.37038 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.762221' translation='2.3333 1.17949 -1.9012'>
+              <transform DEF='AOPT_Transform_795175072' rotation='1 0 0 1.96886' scale='0.04 0.205556 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.762222' translation='2.6386 0.993571 -1.5814'>
+              <transform USE='AOPT_Transform_795175072'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.762221' translation='2.4651 1.83883 -1.6437'>
+              <transform USE='AOPT_Transform_795175072'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.762222' translation='2.7704 1.65291 -1.3239'>
+              <transform USE='AOPT_Transform_795175072'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77611' translation='0.7773 2.8184 -1.60395'>
+              <transform rotation='1 0 0 1.41919' scale='0.2 1.37988 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77611' translation='1.01389 2.50065 -1.77995'>
+              <transform DEF='AOPT_Transform_795191088' rotation='1 0 0 1.41919' scale='0.04 0.206982 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77611' translation='0.546496 2.57359 -1.87728'>
+              <transform USE='AOPT_Transform_795191088'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77611' translation='1.0081 3.06321 -1.33062'>
+              <transform USE='AOPT_Transform_795191088'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77611' translation='0.540714 3.13615 -1.42796'>
+              <transform USE='AOPT_Transform_795191088'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.343847' translation='1.67515 2.76625 -0.82215'>
+              <transform rotation='1 0 0 1.4947' scale='0.2 1.36939 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.343846' translation='1.81853 2.47215 -1.10495'>
+              <transform DEF='AOPT_Transform_795208336' rotation='1 0 0 1.4947' scale='0.04 0.205408 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.343846' translation='1.97963 2.50859 -0.655029'>
+              <transform USE='AOPT_Transform_795208336'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.343846' translation='1.37067 3.02391 -0.98927'>
+              <transform USE='AOPT_Transform_795208336'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.343846' translation='1.53177 3.06035 -0.539345'>
+              <transform USE='AOPT_Transform_795208336'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.50109' translation='-0.2176 2.51115 -2.182'>
+              <transform rotation='1 0 0 2.21524' scale='0.2 1.36978 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -2.50109' translation='0.199919 2.46721 -2.07804'>
+              <transform DEF='AOPT_Transform_795202176' rotation='1 0 0 2.21524' scale='0.04 0.205467 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -2.50109' translation='-0.029121 2.1792 -2.38533'>
+              <transform USE='AOPT_Transform_795202176'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.50109' translation='-0.406079 2.8431 -1.97866'>
+              <transform USE='AOPT_Transform_795202176'></transform>
+            </transform>
+            <transform rotation='0 1 0 -2.50109' translation='-0.635119 2.55509 -2.28596'>
+              <transform USE='AOPT_Transform_795202176'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.711398' translation='-0.32595 3.0844 -1.2377'>
+              <transform rotation='1 0 0 1.33285' scale='0.2 1.3729 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.711398' translation='0.0968 3.01409 -1.17718'>
+              <transform DEF='AOPT_Transform_795215728' rotation='1 0 0 1.33285' scale='0.04 0.205934 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.711398' translation='-0.208085 3.12735 -0.82347'>
+              <transform USE='AOPT_Transform_795215728'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.711398' translation='-0.443815 3.04145 -1.65193'>
+              <transform USE='AOPT_Transform_795215728'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.711398' translation='-0.7487 3.15471 -1.29822'>
+              <transform USE='AOPT_Transform_795215728'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.22017' translation='-1.1816 2.00385 -2.3881'>
+              <transform rotation='1 0 0 1.71123' scale='0.2 1.36959 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.22017' translation='-0.948606 1.69573 -2.58258'>
+              <transform DEF='AOPT_Transform_795494976' rotation='1 0 0 1.71123' scale='0.04 0.205438 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.22017' translation='-1.39437 1.62863 -2.41955'>
+              <transform USE='AOPT_Transform_795494976'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.22017' translation='-0.968834 2.37907 -2.35665'>
+              <transform USE='AOPT_Transform_795494976'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.22017' translation='-1.41459 2.31197 -2.19362'>
+              <transform USE='AOPT_Transform_795494976'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.42807' translation='3.09795 0.4694 -1.1399'>
+              <transform rotation='1 0 0 2.97995' scale='0.2 1.38039 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.42807' translation='2.82804 0.664151 -1.41771'>
+              <transform DEF='AOPT_Transform_795496208' rotation='1 0 0 2.97995' scale='0.04 0.207059 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.42807' translation='2.905 0.187311 -1.40665'>
+              <transform USE='AOPT_Transform_795496208'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.42807' translation='3.29089 0.751489 -0.873154'>
+              <transform USE='AOPT_Transform_795496208'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.42807' translation='3.36786 0.274649 -0.862094'>
+              <transform USE='AOPT_Transform_795496208'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.110704' translation='2.92295 1.5023 -0.5705'>
+              <transform rotation='1 0 0 1.03235' scale='0.2 1.37169 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.110704' translation='2.69358 1.58611 -0.927696'>
+              <transform DEF='AOPT_Transform_795528240' rotation='1 0 0 1.03236' scale='0.04 0.205754 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.110704' translation='2.64805 1.8323 -0.518056'>
+              <transform DEF='AOPT_Transform_795527008' rotation='1 0 0 1.03235' scale='0.04 0.205753 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.110704' translation='3.19785 1.1723 -0.622944'>
+              <transform USE='AOPT_Transform_795528240'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.110704' translation='3.15231 1.41849 -0.213304'>
+              <transform USE='AOPT_Transform_795527008'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.069878' translation='3.25 -0.53715 -0.5226'>
+              <transform rotation='1 0 0 2.0656' scale='0.2 1.3703 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.069878' translation='3.06194 -0.705726 -0.873769'>
+              <transform DEF='AOPT_Transform_795534400' rotation='1 0 0 2.0656' scale='0.04 0.205544 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.069878' translation='3.09141 -0.933471 -0.452719'>
+              <transform USE='AOPT_Transform_795534400'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.069878' translation='3.40859 -0.140829 -0.592481'>
+              <transform USE='AOPT_Transform_795534400'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.069878' translation='3.43806 -0.368574 -0.171431'>
+              <transform USE='AOPT_Transform_795534400'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79272' translation='-2.1222 1.29235 -2.22375'>
+              <transform rotation='1 0 0 2.67326' scale='0.2 1.37988 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79272' translation='-1.72082 1.38028 -2.36187'>
+              <transform DEF='AOPT_Transform_795547952' rotation='1 0 0 2.67326' scale='0.04 0.206982 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79272' translation='-1.93349 0.949329 -2.40986'>
+              <transform USE='AOPT_Transform_795547952'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79272' translation='-2.31091 1.63537 -2.03764'>
+              <transform USE='AOPT_Transform_795547952'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79272' translation='-2.52358 1.20441 -2.08563'>
+              <transform USE='AOPT_Transform_795547952'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.11769' translation='-1.88745 2.26275 -1.5712'>
+              <transform rotation='1 0 0 1.02799' scale='0.2 1.37357 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.11769' translation='-1.52294 2.25231 -1.80444'>
+              <transform DEF='AOPT_Transform_796069728' rotation='1 0 0 1.02799' scale='0.04 0.206035 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.11769' translation='-1.57127 2.50064 -1.39564'>
+              <transform USE='AOPT_Transform_796069728'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.11769' translation='-2.20363 2.02486 -1.74676'>
+              <transform USE='AOPT_Transform_796069728'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.11769' translation='-2.25196 2.27319 -1.33796'>
+              <transform USE='AOPT_Transform_796069728'></transform>
+            </transform>
+            <transform rotation='0 1 0 2.30144' translation='-2.0892 0.16115 -2.5941'>
+              <transform rotation='1 0 0 2.42152' scale='0.2 1.37158 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 2.30144' translation='-1.92264 0.556564 -2.53827'>
+              <transform DEF='AOPT_Transform_796070960' rotation='1 0 0 2.42152' scale='0.04 0.205737 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 2.30144' translation='-1.68688 0.195679 -2.74953'>
+              <transform USE='AOPT_Transform_796070960'></transform>
+            </transform>
+            <transform rotation='0 1 0 2.30144' translation='-2.49152 0.126621 -2.43867'>
+              <transform USE='AOPT_Transform_796070960'></transform>
+            </transform>
+            <transform rotation='0 1 0 2.30144' translation='-2.25576 -0.234264 -2.64993'>
+              <transform USE='AOPT_Transform_796070960'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.618466' translation='-2.79265 0.41425 -1.77705'>
+              <transform rotation='1 0 0 1.96418' scale='0.2 1.36937 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.618466' translation='-2.59312 0.797478 -1.75831'>
+              <transform DEF='AOPT_Transform_796079584' rotation='1 0 0 1.96418' scale='0.04 0.205406 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.618466' translation='-2.84978 0.613763 -1.39763'>
+              <transform USE='AOPT_Transform_796079584'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.618466' translation='-2.73552 0.214737 -2.15647'>
+              <transform USE='AOPT_Transform_796079584'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.618466' translation='-2.99218 0.031022 -1.79579'>
+              <transform USE='AOPT_Transform_796079584'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450633' translation='-1.9118 -0.9337 -2.56645'>
+              <transform rotation='1 0 0 2.57814' scale='0.2 1.37045 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450632' translation='-1.5183 -0.848131 -2.72442'>
+              <transform DEF='AOPT_Transform_796078352' rotation='1 0 0 2.57814' scale='0.04 0.205568 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450632' translation='-1.62988 -1.25364 -2.4938'>
+              <transform USE='AOPT_Transform_796078352'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450634' translation='-2.19372 -0.613759 -2.6391'>
+              <transform USE='AOPT_Transform_796078352'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450634' translation='-2.3053 -1.01927 -2.40848'>
+              <transform USE='AOPT_Transform_796078352'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.3753' translation='-1.5907 -1.9991 -2.14185'>
+              <transform rotation='1 0 0 2.35237' scale='0.2 1.38018 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.3753' translation='-1.51753 -1.62391 -2.34635'>
+              <transform DEF='AOPT_Transform_796119008' rotation='1 0 0 2.35237' scale='0.04 0.207028 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.3753' translation='-1.18118 -1.96418 -2.27974'>
+              <transform USE='AOPT_Transform_796119008'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.3753' translation='-2.00022 -2.03402 -2.00396'>
+              <transform USE='AOPT_Transform_796119008'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.3753' translation='-1.66387 -2.37429 -1.93735'>
+              <transform USE='AOPT_Transform_796119008'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.710608' translation='-2.5067 -1.35635 -1.73095'>
+              <transform rotation='1 0 0 1.34033' scale='0.2 1.37155 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.710609' translation='-2.34059 -1.06437 -2.00365'>
+              <transform DEF='AOPT_Transform_796569808' rotation='1 0 0 1.34033' scale='0.04 0.205732 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.710608' translation='-2.64544 -0.954713 -1.64941'>
+              <transform USE='AOPT_Transform_796569808'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.710609' translation='-2.36796 -1.75799 -1.81249'>
+              <transform USE='AOPT_Transform_796569808'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.710608' translation='-2.67281 -1.64833 -1.45825'>
+              <transform USE='AOPT_Transform_796569808'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.071266' translation='-1.06725 -2.8102 -1.44505'>
+              <transform rotation='1 0 0 2.06501' scale='0.2 1.37033 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.071267' translation='-0.723295 -2.69877 -1.68251'>
+              <transform DEF='AOPT_Transform_796559952' rotation='1 0 0 2.06501' scale='0.04 0.20555 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.071267' translation='-0.69323 -2.92627 -1.26135'>
+              <transform USE='AOPT_Transform_796559952'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.071267' translation='-1.44127 -2.69413 -1.62875'>
+              <transform USE='AOPT_Transform_796559952'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.071267' translation='-1.41121 -2.92163 -1.20759'>
+              <transform USE='AOPT_Transform_796559952'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77525' translation='-0.3614 -3.24015 -0.70595'>
+              <transform rotation='1 0 0 1.417' scale='0.2 1.37017 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77525' translation='-0.039733 -3.11511 -0.966697'>
+              <transform DEF='AOPT_Transform_796561184' rotation='1 0 0 1.417' scale='0.04 0.205526 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77525' translation='-0.503763 -3.04164 -1.06291'>
+              <transform USE='AOPT_Transform_796561184'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77525' translation='-0.219037 -3.43866 -0.348988'>
+              <transform USE='AOPT_Transform_796561184'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77525' translation='-0.683067 -3.36519 -0.445203'>
+              <transform USE='AOPT_Transform_796561184'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340042' translation='0.531 -3.2916 0.0802'>
+              <transform rotation='1 0 0 1.4932' scale='0.2 1.38035 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.340043' translation='0.742811 -3.13598 -0.264577'>
+              <transform DEF='AOPT_Transform_796558720' rotation='1 0 0 1.4932' scale='0.04 0.207053 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.340043' translation='0.903461 -3.09853 0.189513'>
+              <transform USE='AOPT_Transform_796558720'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340042' translation='0.158539 -3.48467 -0.029113'>
+              <transform USE='AOPT_Transform_796558720'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340043' translation='0.319189 -3.44722 0.424977'>
+              <transform USE='AOPT_Transform_796558720'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.708804' translation='-1.4616 -2.97695 -0.3334'>
+              <transform rotation='1 0 0 1.33946' scale='0.2 1.3804 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.708804' translation='-1.46643 -2.78741 -0.723279'>
+              <transform DEF='AOPT_Transform_796596912' rotation='1 0 0 1.33946' scale='0.04 0.20706 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.708804' translation='-1.77254 -2.67663 -0.366279'>
+              <transform USE='AOPT_Transform_796596912'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.708804' translation='-1.15066 -3.27727 -0.300521'>
+              <transform USE='AOPT_Transform_796596912'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.708804' translation='-1.45677 -3.16649 0.056479'>
+              <transform USE='AOPT_Transform_796596912'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.73916' translation='-3.05075 -0.52395 -1.24335'>
+              <transform rotation='1 0 0 0.161521' scale='0.2 1.36932 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.73915' translation='-2.79096 -0.732539 -1.51908'>
+              <transform DEF='AOPT_Transform_796610464' rotation='1 0 0 0.161521' scale='0.04 0.205399 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.73916' translation='-2.86695 -0.259514 -1.53199'>
+              <transform rotation='1 0 0 0.161521' scale='0.04 0.205398 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.73916' translation='-3.23455 -0.788386 -0.95471'>
+              <transform USE='AOPT_Transform_796610464'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.73916' translation='-3.31054 -0.315361 -0.967625'>
+              <transform USE='AOPT_Transform_796610464'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.072564' translation='-2.8982 -1.5279 -0.6196'>
+              <transform rotation='1 0 0 2.06654' scale='0.2 1.37991 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.072564' translation='-2.63673 -1.60628 -0.956361'>
+              <transform DEF='AOPT_Transform_797176976' rotation='1 0 0 2.06654' scale='0.04 0.206987 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.072564' translation='-2.60593 -1.83602 -0.53265'>
+              <transform USE='AOPT_Transform_797176976'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.072564' translation='-3.19047 -1.21978 -0.706549'>
+              <transform USE='AOPT_Transform_797176976'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.072564' translation='-3.15967 -1.44952 -0.282839'>
+              <transform USE='AOPT_Transform_797176976'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.121715' translation='-3.23145 0.50715 -0.67195'>
+              <transform rotation='1 0 0 1.03186' scale='0.2 1.38478 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.121715' translation='-3.00524 0.648854 -1.01411'>
+              <transform DEF='AOPT_Transform_797180672' rotation='1 0 0 1.03186' scale='0.04 0.207717 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.121715' translation='-3.05574 0.897599 -0.601217'>
+              <transform USE='AOPT_Transform_797180672'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.121715' translation='-3.40716 0.116701 -0.742683'>
+              <transform USE='AOPT_Transform_797180672'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.121715' translation='-3.45766 0.365446 -0.329788'>
+              <transform USE='AOPT_Transform_797180672'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36072' translation='-1.359 2.93185 -0.8598'>
+              <transform rotation='1 0 0 1.09558' scale='0.2 1.37412 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.36072' translation='-1.42926 2.67952 -1.2045'>
+              <transform DEF='AOPT_Transform_797186832' rotation='1 0 0 1.09558' scale='0.04 0.206118 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.36072' translation='-1.01101 2.89956 -1.11532'>
+              <transform USE='AOPT_Transform_797186832'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36072' translation='-1.70699 2.96414 -0.604281'>
+              <transform USE='AOPT_Transform_797186832'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36072' translation='-1.28874 3.18418 -0.515101'>
+              <transform USE='AOPT_Transform_797186832'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.633469' translation='-2.3365 2.3577 -0.4698'>
+              <transform rotation='1 0 0 1.95535' scale='0.2 1.38506 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.633468' translation='-2.27484 2.15709 -0.849676'>
+              <transform DEF='AOPT_Transform_797125232' rotation='1 0 0 1.95535' scale='0.04 0.207759 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.633468' translation='-2.54084 1.97523 -0.487496'>
+              <transform USE='AOPT_Transform_797125232'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.633468' translation='-2.13216 2.74017 -0.452104'>
+              <transform USE='AOPT_Transform_797125232'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.633468' translation='-2.39816 2.55831 -0.089924'>
+              <transform USE='AOPT_Transform_797125232'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.345755' translation='-0.52775 3.30915 -0.0835'>
+              <transform rotation='1 0 0 1.47978' scale='0.2 1.38517 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.345755' translation='-0.276757 3.20807 -0.422832'>
+              <transform DEF='AOPT_Transform_797106752' rotation='1 0 0 1.47978' scale='0.04 0.207775 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.345755' translation='-0.113132 3.25214 0.031399'>
+              <transform USE='AOPT_Transform_797106752'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.345755' translation='-0.942368 3.36616 -0.198398'>
+              <transform USE='AOPT_Transform_797106752'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.345755' translation='-0.778743 3.41023 0.255832'>
+              <transform USE='AOPT_Transform_797106752'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36979' translation='2.3816 2.33615 -0.08235'>
+              <transform rotation='1 0 0 2.35213' scale='0.2 1.36931 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.36979' translation='2.17011 2.39242 -0.45535'>
+              <transform DEF='AOPT_Transform_797111680' rotation='1 0 0 2.35213' scale='0.04 0.205396 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.36979' translation='2.50352 2.05492 -0.387415'>
+              <transform USE='AOPT_Transform_797111680'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36979' translation='2.25968 2.61738 0.222715'>
+              <transform USE='AOPT_Transform_797111680'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36979' translation='2.59309 2.27988 0.29065'>
+              <transform USE='AOPT_Transform_797111680'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.705652' translation='1.46895 2.9818 0.33275'>
+              <transform rotation='1 0 0 1.33241' scale='0.2 1.38482 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.705652' translation='1.35075 2.94211 -0.082923'>
+              <transform DEF='AOPT_Transform_797099360' rotation='1 0 0 1.33241' scale='0.04 0.207723 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.705652' translation='1.04531 3.05656 0.275582'>
+              <transform USE='AOPT_Transform_797099360'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.705652' translation='1.89259 2.90704 0.389918'>
+              <transform USE='AOPT_Transform_797099360'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.705652' translation='1.58715 3.02149 0.748423'>
+              <transform USE='AOPT_Transform_797099360'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.07102' translation='2.90095 1.52535 0.61985'>
+              <transform rotation='1 0 0 2.06726' scale='0.2 1.37996 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.071019' translation='2.93817 1.32895 0.235194'>
+              <transform DEF='AOPT_Transform_797142480' rotation='1 0 0 2.06726' scale='0.04 0.206994 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.071019' translation='2.9683 1.09889 0.658799'>
+              <transform USE='AOPT_Transform_797142480'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.071019' translation='2.8336 1.95181 0.580901'>
+              <transform USE='AOPT_Transform_797142480'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.071019' translation='2.86373 1.72175 1.00451'>
+              <transform USE='AOPT_Transform_797142480'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79443' translation='2.9918 -1.47445 0.0106'>
+              <transform rotation='1 0 0 2.67534' scale='0.2 1.37015 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79443' translation='3.02224 -1.18522 -0.309578'>
+              <transform DEF='AOPT_Transform_797132624' rotation='1 0 0 2.67534' scale='0.04 0.205522 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79443' translation='2.81203 -1.61359 -0.357388'>
+              <transform USE='AOPT_Transform_797132624'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79443' translation='3.17157 -1.33531 0.378588'>
+              <transform USE='AOPT_Transform_797132624'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79443' translation='2.96136 -1.76368 0.330778'>
+              <transform USE='AOPT_Transform_797132624'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.112911' translation='3.2253 -0.50905 0.668'>
+              <transform rotation='1 0 0 1.0332' scale='0.2 1.38048 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.112911' translation='3.20301 -0.32886 0.274303'>
+              <transform DEF='AOPT_Transform_797135088' rotation='1 0 0 1.0332' scale='0.04 0.207071 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.112911' translation='3.15625 -0.081445 0.686673'>
+              <transform USE='AOPT_Transform_797135088'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.112911' translation='3.29435 -0.936655 0.649327'>
+              <transform USE='AOPT_Transform_797135088'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.112911' translation='3.24759 -0.68924 1.0617'>
+              <transform USE='AOPT_Transform_797135088'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617655' translation='2.32175 -2.34855 0.4628'>
+              <transform rotation='1 0 0 1.9604' scale='0.2 1.38037 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617655' translation='2.20103 -2.36811 0.046871'>
+              <transform DEF='AOPT_Transform_798313424' rotation='1 0 0 1.9604' scale='0.04 0.207056 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617654' translation='1.9422 -2.55161 0.411221'>
+              <transform USE='AOPT_Transform_798313424'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617655' translation='2.7013 -2.14549 0.514379'>
+              <transform USE='AOPT_Transform_798313424'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.617654' translation='2.44248 -2.32899 0.878729'>
+              <transform USE='AOPT_Transform_798313424'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78115' translation='1.35625 -2.9244 0.8561'>
+              <transform rotation='1 0 0 2.04634' scale='0.2 1.37041 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78115' translation='1.60686 -2.75182 0.548645'>
+              <transform DEF='AOPT_Transform_798304800' rotation='1 0 0 2.04634' scale='0.04 0.205561 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78115' translation='1.18983 -2.97141 0.459605'>
+              <transform USE='AOPT_Transform_798304800'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78115' translation='1.52267 -2.87739 1.25259'>
+              <transform USE='AOPT_Transform_798304800'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78115' translation='1.10564 -3.09698 1.16356'>
+              <transform USE='AOPT_Transform_798304800'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.111416' translation='1.88645 -2.26045 1.5692'>
+              <transform rotation='1 0 0 1.03473' scale='0.2 1.3715 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.111416' translation='2.11237 -2.11839 1.22864'>
+              <transform DEF='AOPT_Transform_798322048' rotation='1 0 0 1.03473' scale='0.04 0.205724 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.111416' translation='2.06648 -1.87321 1.63877'>
+              <transform USE='AOPT_Transform_798322048'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.111416' translation='1.70642 -2.64769 1.49963'>
+              <transform USE='AOPT_Transform_798322048'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.111416' translation='1.66053 -2.40251 1.90976'>
+              <transform USE='AOPT_Transform_798322048'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.70835' translation='0.326 -3.0823 1.2361'>
+              <transform rotation='1 0 0 1.34161' scale='0.2 1.37159 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.708351' translation='0.207244 -3.12162 0.821896'>
+              <transform DEF='AOPT_Transform_798342992' rotation='1 0 0 1.34161' scale='0.04 0.205739 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.70835' translation='-0.096906 -3.01256 1.17694'>
+              <transform USE='AOPT_Transform_798342992'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.70835' translation='0.748906 -3.15204 1.29526'>
+              <transform USE='AOPT_Transform_798342992'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.70835' translation='0.444756 -3.04298 1.6503'>
+              <transform USE='AOPT_Transform_798342992'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76803' translation='-2.37655 -2.3374 0.08115'>
+              <transform rotation='1 0 0 0.791381' scale='0.2 1.36954 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76803' translation='-2.091 -2.45504 -0.221606'>
+              <transform DEF='AOPT_Transform_798346688' rotation='1 0 0 0.79138' scale='0.04 0.205431 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76803' translation='-2.42535 -2.11813 -0.288421'>
+              <transform USE='AOPT_Transform_798346688'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76803' translation='-2.32775 -2.55667 0.450721'>
+              <transform USE='AOPT_Transform_798346688'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76803' translation='-2.6621 -2.21976 0.383906'>
+              <transform USE='AOPT_Transform_798346688'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.339926' translation='-1.6712 -2.7675 0.82045'>
+              <transform rotation='1 0 0 1.49597' scale='0.2 1.36969 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.339926' translation='-1.41799 -2.86522 0.483715'>
+              <transform DEF='AOPT_Transform_798345456' rotation='1 0 0 1.49596' scale='0.04 0.205453 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.339926' translation='-1.2586 -2.82938 0.93441'>
+              <transform USE='AOPT_Transform_798345456'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.339926' translation='-2.0838 -2.70562 0.70649'>
+              <transform USE='AOPT_Transform_798345456'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.339926' translation='-1.92441 -2.66978 1.15718'>
+              <transform USE='AOPT_Transform_798345456'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.119728' translation='-2.9248 -1.5069 0.57255'>
+              <transform rotation='1 0 0 1.03718' scale='0.2 1.37305 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.119727' translation='-2.94808 -1.32508 0.18046'>
+              <transform DEF='AOPT_Transform_798361472' rotation='1 0 0 1.03718' scale='0.04 0.205958 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.119727' translation='-2.9975 -1.08064 0.591255'>
+              <transform USE='AOPT_Transform_798361472'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.119727' translation='-2.8521 -1.93316 0.553845'>
+              <transform USE='AOPT_Transform_798361472'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.119727' translation='-2.90152 -1.68872 0.96464'>
+              <transform USE='AOPT_Transform_798361472'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.35337' translation='-3.01005 1.4802 -0.01725'>
+              <transform rotation='1 0 0 0.452942' scale='0.2 1.37394 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.35337' translation='-2.98136 1.23661 -0.373976'>
+              <transform DEF='AOPT_Transform_798398432' rotation='1 0 0 0.452942' scale='0.04 0.206092 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.35337' translation='-2.77587 1.669 -0.328581'>
+              <transform USE='AOPT_Transform_798398432'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.35337' translation='-3.24423 1.2914 0.294081'>
+              <transform USE='AOPT_Transform_798398432'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.35337' translation='-3.03874 1.72379 0.339476'>
+              <transform USE='AOPT_Transform_798398432'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.056252' translation='-3.26965 0.53425 0.5208'>
+              <transform rotation='1 0 0 2.06871' scale='0.2 1.37461 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.056252' translation='-3.22812 0.337734 0.137233'>
+              <transform DEF='AOPT_Transform_798383648' rotation='1 0 0 2.06871' scale='0.04 0.206192 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.056252' translation='-3.20435 0.107959 0.559263'>
+              <transform USE='AOPT_Transform_798383648'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.056252' translation='-3.33495 0.960541 0.482337'>
+              <transform USE='AOPT_Transform_798383648'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.056252' translation='-3.31118 0.730766 0.904367'>
+              <transform USE='AOPT_Transform_798383648'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340052' translation='-2.49345 2.1566 0.67805'>
+              <transform rotation='1 0 0 1.48324' scale='0.2 1.34263 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.340052' translation='-2.27881 2.30817 0.337809'>
+              <transform DEF='AOPT_Transform_798388576' rotation='1 0 0 1.48324' scale='0.04 0.201395 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.340052' translation='-2.12267 2.34926 0.779124'>
+              <transform USE='AOPT_Transform_798388576'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340052' translation='-2.86422 1.96395 0.576976'>
+              <transform USE='AOPT_Transform_798388576'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.340052' translation='-2.70809 2.00503 1.01829'>
+              <transform USE='AOPT_Transform_798388576'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36314' translation='0.3693 3.2587 0.70515'>
+              <transform rotation='1 0 0 1.73655' scale='0.2 1.37456 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.36314' translation='0.19799 3.22617 0.308845'>
+              <transform DEF='AOPT_Transform_798426768' rotation='1 0 0 1.73655' scale='0.04 0.206185 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.36314' translation='0.6623 3.14679 0.406669'>
+              <transform USE='AOPT_Transform_798426768'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36314' translation='0.076301 3.37061 1.00363'>
+              <transform USE='AOPT_Transform_798426768'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.36314' translation='0.54061 3.29123 1.10145'>
+              <transform USE='AOPT_Transform_798426768'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.625597' translation='-0.65935 3.12435 1.07115'>
+              <transform rotation='1 0 0 1.94879' scale='0.2 1.3426 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.625597' translation='-0.780467 3.09915 0.659447'>
+              <transform DEF='AOPT_Transform_799035024' rotation='1 0 0 1.94879' scale='0.04 0.20139 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.625597' translation='-1.03621 2.92572 1.01347'>
+              <transform USE='AOPT_Transform_799035024'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.625597' translation='-0.282488 3.32298 1.12883'>
+              <transform USE='AOPT_Transform_799035024'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.625597' translation='-0.538233 3.14955 1.48285'>
+              <transform USE='AOPT_Transform_799035024'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.08099' translation='1.0818 2.8257 1.45105'>
+              <transform rotation='1 0 0 2.05466' scale='0.2 1.37402 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.080991' translation='1.34092 2.74348 1.11413'>
+              <transform DEF='AOPT_Transform_799021472' rotation='1 0 0 2.05466' scale='0.04 0.206103 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.080991' translation='1.37536 2.51976 1.53844'>
+              <transform USE='AOPT_Transform_799021472'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.080991' translation='0.788237 3.13164 1.36366'>
+              <transform USE='AOPT_Transform_799021472'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.080991' translation='0.822677 2.90792 1.78797'>
+              <transform USE='AOPT_Transform_799021472'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.42225' translation='3.05125 0.52055 1.24105'>
+              <transform rotation='1 0 0 2.98256' scale='0.2 1.36958 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.42225' translation='3.02037 0.749717 0.875572'>
+              <transform DEF='AOPT_Transform_799026400' rotation='1 0 0 2.98256' scale='0.04 0.205437 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.42225' translation='3.09545 0.276412 0.886807'>
+              <transform USE='AOPT_Transform_799026400'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.42225' translation='3.00705 0.764688 1.59529'>
+              <transform USE='AOPT_Transform_799026400'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.42225' translation='3.08213 0.291383 1.60653'>
+              <transform USE='AOPT_Transform_799026400'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.702683' translation='2.5123 1.35605 1.73475'>
+              <transform rotation='1 0 0 1.33662' scale='0.2 1.37347 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.702683' translation='2.50633 1.54684 1.34625'>
+              <transform DEF='AOPT_Transform_799063360' rotation='1 0 0 1.33662' scale='0.04 0.20602 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.702683' translation='2.20414 1.65839 1.70307'>
+              <transform USE='AOPT_Transform_799063360'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.702683' translation='2.82046 1.05371 1.76643'>
+              <transform USE='AOPT_Transform_799063360'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.702683' translation='2.51827 1.16526 2.12325'>
+              <transform USE='AOPT_Transform_799063360'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.615695' translation='2.7929 -0.4168 1.7739'>
+              <transform rotation='1 0 0 1.96212' scale='0.2 1.36963 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.615695' translation='2.85001 -0.617673 1.39517'>
+              <transform DEF='AOPT_Transform_798947552' rotation='1 0 0 1.96212' scale='0.04 0.205444 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.615695' translation='2.59409 -0.800513 1.75693'>
+              <transform USE='AOPT_Transform_798947552'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.615695' translation='2.99171 -0.033087 1.79087'>
+              <transform USE='AOPT_Transform_798947552'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.615695' translation='2.73579 -0.215927 2.15263'>
+              <transform USE='AOPT_Transform_798947552'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79079' translation='2.1241 -1.2941 2.2229'>
+              <transform rotation='1 0 0 2.67453' scale='0.2 1.38001 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79079' translation='2.36072 -1.10589 1.91224'>
+              <transform DEF='AOPT_Transform_798941392' rotation='1 0 0 2.67453' scale='0.04 0.207001 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79079' translation='2.14848 -1.53716 1.86478'>
+              <transform USE='AOPT_Transform_798941392'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79079' translation='2.09972 -1.05104 2.58102'>
+              <transform USE='AOPT_Transform_798941392'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.79079' translation='1.88748 -1.48231 2.53356'>
+              <transform USE='AOPT_Transform_798941392'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.826306' translation='2.09415 -0.1623 2.59765'>
+              <transform rotation='1 0 0 0.72076' scale='0.2 1.37281 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.826307' translation='2.35593 -0.110171 2.25696'>
+              <transform DEF='AOPT_Transform_798948784' rotation='1 0 0 0.72076' scale='0.04 0.205922 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.826307' translation='2.12272 0.250819 2.47182'>
+              <transform USE='AOPT_Transform_798948784'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.826307' translation='2.06558 -0.575419 2.72348'>
+              <transform USE='AOPT_Transform_798948784'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.826307' translation='1.83237 -0.214429 2.93834'>
+              <transform USE='AOPT_Transform_798948784'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.2191' translation='1.18485 -2.00865 2.3885'>
+              <transform rotation='1 0 0 1.7151' scale='0.2 1.36927 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.2191' translation='1.33588 -2.18405 2.0232'>
+              <transform DEF='AOPT_Transform_798995600' rotation='1 0 0 1.7151' scale='0.04 0.205391 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.2191' translation='0.890642 -2.25296 2.18658'>
+              <transform USE='AOPT_Transform_798995600'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.2191' translation='1.47906 -1.76434 2.59042'>
+              <transform USE='AOPT_Transform_798995600'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.2191' translation='1.03382 -1.83325 2.7538'>
+              <transform USE='AOPT_Transform_798995600'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77682' translation='-0.776 -2.8214 1.6038'>
+              <transform rotation='1 0 0 1.41788' scale='0.2 1.37995 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77682' translation='-0.479364 -2.92101 1.30379'>
+              <transform DEF='AOPT_Transform_798986976' rotation='1 0 0 1.41788' scale='0.04 0.206992 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77682' translation='-0.946615 -2.84743 1.20614'>
+              <transform USE='AOPT_Transform_798986976'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77682' translation='-0.605386 -2.79537 2.00146'>
+              <transform USE='AOPT_Transform_798986976'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.77682' translation='-1.07264 -2.7218 1.90381'>
+              <transform USE='AOPT_Transform_798986976'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.642298' translation='0.22015 -2.5168 2.1826'>
+              <transform rotation='1 0 0 0.929366' scale='0.2 1.36945 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.642298' translation='0.40033 -2.6768 1.82348'>
+              <transform DEF='AOPT_Transform_798990672' rotation='1 0 0 0.929366' scale='0.04 0.205418 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.642298' translation='0.630385 -2.39 2.13099'>
+              <transform USE='AOPT_Transform_798990672'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.642298' translation='-0.190085 -2.6436 2.23422'>
+              <transform USE='AOPT_Transform_798990672'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.642298' translation='0.03997 -2.35681 2.54172'>
+              <transform USE='AOPT_Transform_798990672'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836532' translation='-1.7824 -2.20325 1.7702'>
+              <transform rotation='1 0 0 0.727181' scale='0.2 1.37353 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836532' translation='-1.84774 -2.32327 1.35947'>
+              <transform DEF='AOPT_Transform_798996832' rotation='1 0 0 0.727181' scale='0.04 0.20603 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836533' translation='-2.08497 -1.96414 1.5736'>
+              <transform USE='AOPT_Transform_798996832'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836532' translation='-1.47983 -2.44236 1.9668'>
+              <transform USE='AOPT_Transform_798996832'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.836532' translation='-1.71706 -2.08323 2.18093'>
+              <transform USE='AOPT_Transform_798996832'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71828' translation='-3.11555 -0.47585 1.14155'>
+              <transform rotation='1 0 0 0.176296' scale='0.2 1.38517 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71828' translation='-3.06658 -0.722698 0.787958'>
+              <transform DEF='AOPT_Transform_800038896' rotation='1 0 0 0.176295' scale='0.04 0.207775 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71828' translation='-3.15068 -0.245403 0.775463'>
+              <transform USE='AOPT_Transform_800038896'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71828' translation='-3.08042 -0.706297 1.50764'>
+              <transform USE='AOPT_Transform_800038896'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.71828' translation='-3.16453 -0.229002 1.49514'>
+              <transform USE='AOPT_Transform_800038896'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.761614' translation='-2.55835 -1.42395 1.61775'>
+              <transform rotation='1 0 0 1.96877' scale='0.2 1.37403 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.761614' translation='-2.59833 -1.56834 1.21159'>
+              <transform DEF='AOPT_Transform_800030272' rotation='1 0 0 1.96877' scale='0.04 0.206104 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.761614' translation='-2.2924 -1.75472 1.53243'>
+              <transform USE='AOPT_Transform_800030272'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.761614' translation='-2.8243 -1.09318 1.70307'>
+              <transform USE='AOPT_Transform_800030272'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.761614' translation='-2.51837 -1.27956 2.02392'>
+              <transform USE='AOPT_Transform_800030272'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.62191' translation='-2.9216 0.6059 1.5619'>
+              <transform rotation='1 0 0 0.93261' scale='0.2 1.34253 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.62191' translation='-2.99508 0.717087 1.1532'>
+              <transform DEF='AOPT_Transform_800064768' rotation='1 0 0 0.932609' scale='0.04 0.20138 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.62191' translation='-2.77521 0.997017 1.45994'>
+              <transform USE='AOPT_Transform_800064768'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.62191' translation='-3.06799 0.214783 1.66386'>
+              <transform USE='AOPT_Transform_800064768'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.62191' translation='-2.84812 0.494713 1.9706'>
+              <transform USE='AOPT_Transform_800064768'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.35858' translation='-1.64755 2.54595 1.4427'>
+              <transform rotation='1 0 0 1.0921' scale='0.2 1.43566 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.35858' translation='-1.8217 2.49057 1.04354'>
+              <transform DEF='AOPT_Transform_799963744' rotation='1 0 0 1.0921' scale='0.04 0.215349 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.35858' translation='-1.38571 2.72203 1.13748'>
+              <transform USE='AOPT_Transform_799963744'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.35858' translation='-1.90939 2.36987 1.74792'>
+              <transform USE='AOPT_Transform_799963744'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.35858' translation='-1.4734 2.60133 1.84186'>
+              <transform USE='AOPT_Transform_799963744'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.453534' translation='-2.43895 1.61055 1.6543'>
+              <transform rotation='1 0 0 2.57504' scale='0.2 1.43347 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.453534' translation='-2.53214 1.69326 1.23358'>
+              <transform DEF='AOPT_Transform_799948960' rotation='1 0 0 2.57504' scale='0.04 0.21502 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.453534' translation='-2.65012 1.26994 1.47564'>
+              <transform USE='AOPT_Transform_799948960'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.453534' translation='-2.22778 1.95116 1.83296'>
+              <transform USE='AOPT_Transform_799948960'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.453534' translation='-2.34577 1.52784 2.07502'>
+              <transform USE='AOPT_Transform_799948960'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.764289' translation='-0.568 2.5969 2.0533'>
+              <transform rotation='1 0 0 1.97167' scale='0.2 1.43355 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.764289' translation='-0.45099 2.79013 1.67712'>
+              <transform DEF='AOPT_Transform_799951424' rotation='1 0 0 1.97167' scale='0.04 0.215032 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.764289' translation='-0.1313 2.59434 2.0106'>
+              <transform USE='AOPT_Transform_799951424'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.764289' translation='-1.0047 2.59946 2.096'>
+              <transform USE='AOPT_Transform_799951424'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.764289' translation='-0.68501 2.40367 2.42948'>
+              <transform USE='AOPT_Transform_799951424'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.37606' translation='1.6058 2.01075 2.15085'>
+              <transform rotation='1 0 0 2.36784' scale='0.2 1.38503 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.37606' translation='1.55278 2.22852 1.77921'>
+              <transform DEF='AOPT_Transform_799953888' rotation='1 0 0 2.36784' scale='0.04 0.207755 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.37606' translation='1.88514 1.88178 1.84477'>
+              <transform USE='AOPT_Transform_799953888'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.37606' translation='1.32646 2.13972 2.45693'>
+              <transform USE='AOPT_Transform_799953888'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.37606' translation='1.65882 1.79298 2.52249'>
+              <transform USE='AOPT_Transform_799953888'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20735' translation='0.50985 2.41165 2.29345'>
+              <transform rotation='1 0 0 1.71197' scale='0.2 1.34248 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20735' translation='0.591622 2.60434 1.91798'>
+              <transform DEF='AOPT_Transform_799989616' rotation='1 0 0 1.71197' scale='0.04 0.201372 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20735' translation='0.156817 2.53823 2.08336'>
+              <transform USE='AOPT_Transform_799989616'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20735' translation='0.862884 2.28507 2.50354'>
+              <transform USE='AOPT_Transform_799989616'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20735' translation='0.428078 2.21896 2.66892'>
+              <transform USE='AOPT_Transform_799989616'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450903' translation='1.9208 0.9344 2.57455'>
+              <transform rotation='1 0 0 2.57858' scale='0.2 1.37409 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450903' translation='2.18752 0.951936 2.23399'>
+              <transform DEF='AOPT_Transform_799993312' rotation='1 0 0 2.57858' scale='0.04 0.206113 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450903' translation='2.07566 0.545236 2.46503'>
+              <transform USE='AOPT_Transform_799993312'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450903' translation='1.76594 1.32356 2.68407'>
+              <transform USE='AOPT_Transform_799993312'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.450901' translation='1.65408 0.916864 2.91511'>
+              <transform USE='AOPT_Transform_799993312'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20407' translation='1.12145 0.25185 3.15025'>
+              <transform rotation='1 0 0 1.71795' scale='0.2 1.38518 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20407' translation='1.35639 -0.054425 2.95186'>
+              <transform DEF='AOPT_Transform_799995776' rotation='1 0 0 1.71795' scale='0.04 0.207777 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20407' translation='0.908704 -0.12551 3.12381'>
+              <transform USE='AOPT_Transform_799995776'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20407' translation='1.3342 0.62921 3.17669'>
+              <transform USE='AOPT_Transform_799995776'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.20407' translation='0.886511 0.558125 3.34864'>
+              <transform USE='AOPT_Transform_799995776'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.828936' translation='0.20985 -1.58935 2.93255'>
+              <transform rotation='1 0 0 0.726157' scale='0.2 1.38486 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.828936' translation='0.612929 -1.55528 2.77539'>
+              <transform DEF='AOPT_Transform_801451376' rotation='1 0 0 0.726156' scale='0.04 0.207728 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.828936' translation='0.375664 -1.19286 2.99284'>
+              <transform USE='AOPT_Transform_801451376'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.828936' translation='0.044036 -1.98584 2.87226'>
+              <transform USE='AOPT_Transform_801451376'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.828936' translation='-0.193229 -1.62341 3.08971'>
+              <transform USE='AOPT_Transform_801451376'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.628028' translation='-1.79245 -1.28235 2.529'>
+              <transform rotation='1 0 0 0.941069' scale='0.2 1.38507 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.628028' translation='-1.60494 -1.6136 2.32052'>
+              <transform DEF='AOPT_Transform_801446448' rotation='1 0 0 0.941069' scale='0.04 0.20776 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.628028' translation='-1.37475 -1.32811 2.63755'>
+              <transform USE='AOPT_Transform_801446448'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.628028' translation='-2.21015 -1.23659 2.42045'>
+              <transform USE='AOPT_Transform_801446448'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.628028' translation='-1.97996 -0.951097 2.73748'>
+              <transform USE='AOPT_Transform_801446448'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.765837' translation='-2.14895 0.7272 2.47695'>
+              <transform rotation='1 0 0 1.96938' scale='0.2 1.43565 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.765837' translation='-2.37088 0.495884 2.17701'>
+              <transform DEF='AOPT_Transform_801437824' rotation='1 0 0 1.96938' scale='0.04 0.215347 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 0.765837' translation='-2.04989 0.300864 2.51081'>
+              <transform USE='AOPT_Transform_801437824'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.765837' translation='-2.24801 1.15354 2.44309'>
+              <transform USE='AOPT_Transform_801437824'></transform>
+            </transform>
+            <transform rotation='0 1 0 0.765837' translation='-1.92702 0.958516 2.77689'>
+              <transform USE='AOPT_Transform_801437824'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.44839' translation='-0.2784 1.71155 2.87705'>
+              <transform rotation='1 0 0 2.57482' scale='0.2 1.43581 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.448391' translation='-0.533917 1.9095 2.57996'>
+              <transform DEF='AOPT_Transform_801476016' rotation='1 0 0 2.57482' scale='0.04 0.215371 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -0.44839' translation='-0.650887 1.48555 2.82311'>
+              <transform USE='AOPT_Transform_801476016'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.448391' translation='0.094087 1.93755 2.93099'>
+              <transform USE='AOPT_Transform_801476016'></transform>
+            </transform>
+            <transform rotation='0 1 0 -0.44839' translation='-0.022883 1.5136 3.17414'>
+              <transform USE='AOPT_Transform_801476016'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.38794' translation='0.0182 0.6281 3.31015'>
+              <transform rotation='1 0 0 2.36277' scale='0.2 1.34263 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.38794' translation='0.096889 0.997854 3.10546'>
+              <transform DEF='AOPT_Transform_801479712' rotation='1 0 0 2.36277' scale='0.04 0.201394 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 1.38794' translation='0.421479 0.663394 3.16549'>
+              <transform USE='AOPT_Transform_801479712'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.38794' translation='-0.385079 0.592806 3.45481'>
+              <transform USE='AOPT_Transform_801479712'></transform>
+            </transform>
+            <transform rotation='0 1 0 1.38794' translation='-0.060489 0.258346 3.51483'>
+              <transform USE='AOPT_Transform_801479712'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78483' translation='-1.06795 0.77725 3.0891'>
+              <transform rotation='1 0 0 2.04712' scale='0.2 1.43354 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78483' translation='-0.932841 1.14772 2.89666'>
+              <transform DEF='AOPT_Transform_801503120' rotation='1 0 0 2.04712' scale='0.04 0.215031 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78483' translation='-1.36856 0.917665 2.80195'>
+              <transform USE='AOPT_Transform_801503120'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78483' translation='-0.767344 0.636835 3.37625'>
+              <transform USE='AOPT_Transform_801503120'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.78483' translation='-1.20306 0.40678 3.28154'>
+              <transform USE='AOPT_Transform_801503120'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.8157' translation='0.1764 -0.46065 3.31955'>
+              <transform rotation='1 0 0 2.66568' scale='0.2 1.37466 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.8157' translation='0.574814 -0.371236 3.17553'>
+              <transform DEF='AOPT_Transform_801511744' rotation='1 0 0 2.66568' scale='0.04 0.206198 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.8157' translation='0.360964 -0.798901 3.12208'>
+              <transform USE='AOPT_Transform_801511744'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.8157' translation='-0.008164 -0.122399 3.51702'>
+              <transform USE='AOPT_Transform_801511744'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.8157' translation='-0.222014 -0.550064 3.46357'>
+              <transform USE='AOPT_Transform_801511744'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76415' translation='-0.79635 -0.97305 3.11255'>
+              <transform rotation='1 0 0 1.42685' scale='0.2 1.37405 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76415' translation='-0.56013 -1.28822 2.93286'>
+              <transform rotation='1 0 0 1.42686' scale='0.04 0.206108 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76415' translation='-1.0272 -1.21923 2.8414'>
+              <transform DEF='AOPT_Transform_801526528' rotation='1 0 0 1.42685' scale='0.04 0.206108 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76415' translation='-0.565495 -0.726865 3.38369'>
+              <transform USE='AOPT_Transform_801526528'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.76415' translation='-1.03257 -0.65788 3.29224'>
+              <transform USE='AOPT_Transform_801526528'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.69407' translation='-1.577 -0.21295 2.96785'>
+              <transform rotation='1 0 0 0.171039' scale='0.2 1.34269 0.2'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.69407' translation='-1.76682 -0.489646 2.69911'>
+              <transform DEF='AOPT_Transform_801280128' rotation='1 0 0 0.171038' scale='0.04 0.201404 0.04'>
+                <shape USE='AOPT_Shape_793507504'></shape>
+              </transform>
+            </transform>
+            <transform rotation='0 1 0 -1.69407' translation='-1.8462 -0.026561 2.68928'>
+              <transform USE='AOPT_Transform_801280128'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.69407' translation='-1.3078 -0.399339 3.24642'>
+              <transform USE='AOPT_Transform_801280128'></transform>
+            </transform>
+            <transform rotation='0 1 0 -1.69407' translation='-1.38718 0.063746 3.23659'>
+              <transform USE='AOPT_Transform_801280128'></transform>
+           	</transform>
+			</transform>
+    	</transform>
+		</scene>
+    </x3d>
+    
+    <canvas id='canvas' style="position: fixed; z-index: 1001; top: 10px; right: 10px; opacity: 0.9">
+	
+</body>
+</html>
